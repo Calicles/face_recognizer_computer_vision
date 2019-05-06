@@ -1,0 +1,13 @@
+4 3
+/ressources/images/pony/apple/face1.png
+/ressources/images/pony/apple/face2.png
+/ressources/images/pony/apple/face3.png
+/ressources/images/pony/apple/gauche1.png
+/ressources/images/pony/apple/gauche2.png
+/ressources/images/pony/apple/gauche3.png
+/ressources/images/pony/apple/droite1.png
+/ressources/images/pony/apple/droite2.png
+/ressources/images/pony/apple/droite3.png
+/ressources/images/pony/apple/dos1.png
+/ressources/images/pony/apple/dos2.png
+/ressources/images/pony/apple/dos3.png

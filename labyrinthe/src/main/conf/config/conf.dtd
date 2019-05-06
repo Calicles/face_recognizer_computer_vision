@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!ELEMENT configuration (screen, beans)>
+<!ELEMENT screen (size)+>
+<!ATTLIST screen class CDATA #REQUIRED>
+
+<!ELEMENT size (#PCDATA) >
+<!ATTLIST size width CDATA #REQUIRED>
+<!ATTLIST size height CDATA #REQUIRED>
+
+<!ELEMENT beans (bean+)>
+
+<!ELEMENT bean (parameters)>
+<!ATTLIST bean id ID #REQUIRED>
+<!ATTLIST bean class CDATA #REQUIRED>
+
+<!ELEMENT injection (paramInjection?, parameters?, injection?)>
+<!ATTLIST injection id ID #REQUIRED>
+<!ATTLIST injection class CDATA #REQUIRED>
+<!ATTLIST injection method CDATA #REQUIRED>
+
+<!ELEMENT paramInjection (#PCDATA)>
+<!ATTLIST paramInjection id ID #REQUIRED>
+<!ATTLIST paramInjection value CDATA #REQUIRED>
+<!ATTLIST paramInjection method CDATA #REQUIRED>
+
+<!ELEMENT parameter EMPTY>
+<!ATTLIST parameter id ID #REQUIRED>
+<!ATTLIST parameter method CDATA #REQUIRED>
+<!ATTLIST parameter value CDATA #REQUIRED>
+
+<!ELEMENT parameters (parameter*, paramInjection*, injection*)>
+<!ATTLIST parameters nbr CDATA #REQUIRED>

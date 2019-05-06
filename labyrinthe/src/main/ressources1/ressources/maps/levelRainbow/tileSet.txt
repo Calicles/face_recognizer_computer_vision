@@ -1,0 +1,16 @@
+15
+0 /ressources/images/levelRainbow/sol1.png
+-1 /ressources/images/tapis1.png
+-2 /ressources/images/tapis2.png
+-3 /ressources/images/tapis3.png
+-4 /ressources/images/tapis4.png
+2 /ressources/images/levelRainbow/centre1.png
+3 /ressources/images/levelRainbow/centre2.png
+4 /ressources/images/levelRainbow/centre3.png
+5 /ressources/images/levelRainbow/centre4.png
+6 /ressources/images/levelRainbow/mur1.png
+7 /ressources/images/levelRainbow/mur2.png
+8 /ressources/images/levelRainbow/mur3.png
+9 /ressources/images/levelRainbow/mur4.png
+10 /ressources/images/levelRainbow/mur5.png
+11 /ressources/images/levelRainbow/mur6.png

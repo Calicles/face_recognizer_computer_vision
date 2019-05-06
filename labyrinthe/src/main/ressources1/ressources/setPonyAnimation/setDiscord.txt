@@ -1,0 +1,13 @@
+4 3
+/ressources/images/pony/discord/face1.png
+/ressources/images/pony/discord/face2.png
+/ressources/images/pony/discord/face3.png
+/ressources/images/pony/discord/left1.png
+/ressources/images/pony/discord/left2.png
+/ressources/images/pony/discord/left3.png
+/ressources/images/pony/discord/right1.png
+/ressources/images/pony/discord/right2.png
+/ressources/images/pony/discord/right3.png
+/ressources/images/pony/discord/back1.png
+/ressources/images/pony/discord/back2.png
+/ressources/images/pony/discord/back3.png

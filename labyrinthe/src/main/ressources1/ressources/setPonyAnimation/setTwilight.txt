@@ -1,0 +1,13 @@
+4 3
+/ressources/images/pony/twilight/face1.png
+/ressources/images/pony/twilight/face2.png
+/ressources/images/pony/twilight/face3.png
+/ressources/images/pony/twilight/left1.png
+/ressources/images/pony/twilight/left2.png
+/ressources/images/pony/twilight/left3.png
+/ressources/images/pony/twilight/right1.png
+/ressources/images/pony/twilight/right2.png
+/ressources/images/pony/twilight/right3.png
+/ressources/images/pony/twilight/back1.png
+/ressources/images/pony/twilight/back2.png
+/ressources/images/pony/twilight/back3.png

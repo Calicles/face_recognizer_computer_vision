@@ -1,0 +1,13 @@
+4 3
+/ressources/images/pony/flutter/face1.png
+/ressources/images/pony/flutter/face2.png
+/ressources/images/pony/flutter/face3.png
+/ressources/images/pony/flutter/gauche1.png
+/ressources/images/pony/flutter/gauche2.png
+/ressources/images/pony/flutter/gauche3.png
+/ressources/images/pony/flutter/droite1.png
+/ressources/images/pony/flutter/droite2.png
+/ressources/images/pony/flutter/droite3.png
+/ressources/images/pony/flutter/dos1.png
+/ressources/images/pony/flutter/dos2.png
+/ressources/images/pony/flutter/dos3.png

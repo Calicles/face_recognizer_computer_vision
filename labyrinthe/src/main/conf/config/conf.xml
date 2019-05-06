@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration SYSTEM "conf.dtd">
+<configuration>
+	<screen class="java.awt.Dimension">
+		<size width="" height="">960</size>
+		<size width="" height="">640</size>
+		<size width="" height="">320</size>
+	</screen>
+	<beans>
+		<bean id="levelApple" class="com.antoine.modele.level.Level">
+			<parameters nbr="3">
+				<parameter id="levelAppleEndImage" value="/ressources/images/fin/apple.png" method="setEndImageUrl" />
+				<injection id="levelApple_player" class="com.antoine.entity.Player" method="setPlayer">
+					<parameters nbr="3">
+						<paramInjection id="levelApple_player_animationFilePath" value="/ressources/setPonyAnimation/setApple.txt" method="setAnimation"/>
+						<injection id="levelApple_player_position" class="com.antoine.geometry.Coordinates" method="setPosition">
+							<parameters nbr="2">
+								<paramInjection id="levelApple_player_positionX" value="40" method="setX"/>
+								<paramInjection id="levelApple_player_positionY" value="50" method="setY"/>
+							</parameters>
+						</injection>
+						<injection id="levelApple_player_deplacement" class="com.antoine.transfert_strategy.Player_transferStrategy_std" method="setDeplacement">
+							<parameters nbr="1">
+								<injection id="levelApple_player_deplacement_vector" class="com.antoine.geometry.Coordinates" method="setVector">
+									<parameters nbr="2">
+										<paramInjection id="levelApple_player_deplacement_vector_directionX" value="4" method="setX"/>
+										<paramInjection id="levelApple_player_deplacement_vector_directionY" value="4" method="setY"/>
+									</parameters>
+								</injection>
+							</parameters>
+						</injection>
+					</parameters>
+				</injection>
+				<injection id="levelApple_map" class="com.antoine.modele.map.Map" method="setMap">
+					<parameters nbr="2">
+						<parameter id="levelApple_map_tileSet" value="/ressources/maps/levelApple/tileSet.txt" method="setTileSet"/>
+						<parameter id="levelApple_map_mapFilePath" value="/ressources/maps/levelApple/map.txt" method="setMap"/>
+					</parameters>
+				</injection>
+			</parameters>
+		</bean>
+		<bean id="levelRarity" class="com.antoine.modele.level.Level">
+			<parameters nbr="3">
+				<parameter id="levelRarityEndImage" value="/ressources/images/fin/all4.jpg" method="setEndImageUrl" />
+				<injection id="levelRarity_player" class="com.antoine.entity.Player" method="setPlayer">
+					<parameters nbr="3">
+						<paramInjection id="levelRarity_player_animationFilePath" value="/ressources/setPonyAnimation/setRarity.txt" method="setAnimation"/>
+						<injection id="levelRarity_player_position" class="com.antoine.geometry.Coordinates" method="setPosition">
+							<parameters nbr="2">
+								<paramInjection id="levelRarity_player_positionX" value="572" method="setX"/>
+								<paramInjection id="levelRarity_player_positionY" value="570" method="setY"/>
+							</parameters>
+						</injection>
+						<injection id="levelRarity_player_deplacement" class="com.antoine.transfert_strategy.Player_transferStrategy_std" method="setDeplacement">
+							<parameters nbr="1">
+								<injection id="levelRarity_player_deplacement_vector" class="com.antoine.geometry.Coordinates" method="setVector">
+									<parameters nbr="2">
+										<paramInjection id="levelRarity_player_deplacement_vector_directionX" value="4" method="setX"/>
+										<paramInjection id="levelRarity_player_deplacement_vector_directionY" value="4" method="setY"/>
+									</parameters>
+								</injection>
+							</parameters>
+						</injection>
+					</parameters>
+				</injection>
+				<injection id="levelRarity_map" class="com.antoine.modele.map.Map" method="setMap">
+					<parameters nbr="2">
+						<parameter id="levelRarity_map_tileSet" value="/ressources/maps/levelRarity/tileSet.txt" method="setTileSet"/>
+						<parameter id="levelRarity_map_mapFilePath" value="/ressources/maps/levelRarity/map.txt" method="setMap"/>
+					</parameters>
+				</injection>
+			</parameters>
+		</bean>
+		<bean id="levelRainbow" class="com.antoine.modele.level.Level">
+			<parameters nbr="3">
+				<parameter id="levelRainbowEndImage" value="/ressources/images/fin/my-little-pony2.jpg" method="setEndImageUrl" />
+				<injection id="levelRainbow_player" class="com.antoine.entity.Player" method="setPlayer">
+					<parameters nbr="3">
+						<paramInjection id="levelRainbow_player_animationFilePath" value="/ressources/setPonyAnimation/setRainbow.txt" method="setAnimation"/>
+						<injection id="levelRainbow_player_position" class="com.antoine.geometry.Coordinates" method="setPosition">
+							<parameters nbr="2">
+								<paramInjection id="levelRainbow_player_positionX" value="40" method="setX"/>
+								<paramInjection id="levelRainbow_player_positionY" value="570" method="setY"/>
+							</parameters>
+						</injection>
+						<injection id="levelRainbow_player_deplacement" class="com.antoine.transfert_strategy.Player_transferStrategy_std" method="setDeplacement">
+							<parameters nbr="1">
+								<injection id="levelRainbow_player_deplacement_vector" class="com.antoine.geometry.Coordinates" method="setVector">
+									<parameters nbr="2">
+										<paramInjection id="levelRainbow_player_deplacement_vector_directionX" value="4" method="setX"/>
+										<paramInjection id="levelRainbow_player_deplacement_vector_directionY" value="4" method="setY"/>
+									</parameters>
+								</injection>
+							</parameters>
+						</injection>
+					</parameters>
+				</injection>
+				<injection id="levelRainbow_map" class="com.antoine.modele.map.Map" method="setMap">
+					<parameters nbr="2">
+						<parameter id="levelRainbow_map_tileSet" value="/ressources/maps/levelRainbow/tileSet.txt" method="setTileSet"/>
+						<parameter id="levelRainbow_map_mapFilePath" value="/ressources/maps/levelRainbow/map.txt" method="setMap"/>
+					</parameters>
+				</injection>
+			</parameters>
+		</bean>
+		<bean id="levelFlutter" class="com.antoine.modele.level.Level2">
+			<parameters nbr="3">
+				<parameter id="levelFlutterEndImage" value="/ressources/images/fin/transition6.png" method="setEndImageUrl" />
+				<injection id="levelFlutter_player" class="com.antoine.entity.Player" method="setPlayer">
+					<parameters nbr="3">
+						<paramInjection id="levelFlutter_player_animationFilePath" value="/ressources/setPonyAnimation/setFlutter.txt" method="setAnimation"/>
+						<injection id="levelFlutter_player_position" class="com.antoine.geometry.Coordinates" method="setPosition">
+							<parameters nbr="2">
+								<paramInjection id="levelFlutter_player_positionX" value="40" method="setX"/>
+								<paramInjection id="levelFlutter_player_positionY" value="690" method="setY"/>
+							</parameters>
+						</injection>
+						<injection id="levelFlutter_player_deplacement" class="com.antoine.transfert_strategy.Player_transferStrategy_std" method="setDeplacement">
+							<parameters nbr="1">
+								<injection id="levelFlutter_player_deplacement_vector" class="com.antoine.geometry.Coordinates" method="setVector">
+									<parameters nbr="2">
+										<paramInjection id="levelFlutter_player_deplacement_vector_directionX" value="4" method="setX"/>
+										<paramInjection id="levelFlutter_player_deplacement_vector_directionY" value="4" method="setY"/>
+									</parameters>
+								</injection>
+							</parameters>
+						</injection>
+					</parameters>
+				</injection>
+				<injection id="levelFlutter_map" class="com.antoine.modele.map.Map" method="setMap">
+					<parameters nbr="2">
+						<parameter id="levelFlutter_map_tileSet" value="/ressources/maps/levelFlutter/tileSet.txt" method="setTileSet"/>
+						<parameter id="levelFlutter_map_mapFilePath" value="/ressources/maps/levelFlutter/map.txt" method="setMap"/>
+					</parameters>
+				</injection>
+			</parameters>
+		</bean>
+		<bean id="levelPinky" class="com.antoine.modele.level.Level3">
+			<parameters nbr="3">
+				<parameter id="levelPinkyEndImage" value="/ressources/images/fin/transition5.png" method="setEndImageUrl" />
+				<injection id="levelPinky_player" class="com.antoine.entity.Player" method="setPlayer">
+					<parameters nbr="3">
+						<paramInjection id="levelPinky_player_animationFilePath" value="/ressources/setPonyAnimation/setPinky.txt" method="setAnimation"/>
+						<injection id="levelPinky_player_position" class="com.antoine.geometry.Coordinates" method="setPosition">
+							<parameters nbr="2">
+								<paramInjection id="levelPinky_player_positionX" value="315" method="setX"/>
+								<paramInjection id="levelPinky_player_positionY" value="960" method="setY"/>
+							</parameters>
+						</injection>
+						<injection id="levelPinky_player_deplacement" class="com.antoine.transfert_strategy.Player_transferStrategy_std" method="setDeplacement">
+							<parameters nbr="1">
+								<injection id="levelPinky_player_deplacement_vector" class="com.antoine.geometry.Coordinates" method="setVector">
+									<parameters nbr="2">
+										<paramInjection id="levelPinky_player_deplacement_vector_directionX" value="4" method="setX"/>
+										<paramInjection id="levelPinky_player_deplacement_vector_directionY" value="4" method="setY"/>
+									</parameters>
+								</injection>
+							</parameters>
+						</injection>
+					</parameters>
+				</injection>
+				<injection id="levelPinky_map" class="com.antoine.modele.map.Map" method="setMap">
+					<parameters nbr="2">
+						<parameter id="levelPinky_map_tileSet" value="/ressources/maps/levelPinky/tileSet.txt" method="setTileSet"/>
+						<parameter id="levelPinky_map_mapFilePath" value="/ressources/maps/levelPinky/map.txt" method="setMap"/>
+					</parameters>
+				</injection>
+			</parameters>
+		</bean>
+		<bean id="levelTwilight" class="com.antoine.modele.level.Level4">
+			<parameters nbr="6">
+				<parameter id="levelTwilightEndImage" value="/ressources/images/fin/final/fin0.png" method="setEndImageUrl" />
+				<parameter id="levelTwilightLoseImage" value="/ressources/images/fin/discord3.png" method="setLoseImagePath"/>
+				<parameter id="levelTwilightNumberEndAnimationImages" method="setNumberEndAnimationImages" value="32"/>
+				<injection id="levelTwilight_player" class="com.antoine.entity.Player" method="setPlayer">
+					<parameters nbr="3">
+						<paramInjection id="levelTwilight_player_animationFilePath" value="/ressources/setPonyAnimation/setTwilight.txt" method="setAnimation"/>
+						<injection id="levelTwilight_player_position" class="com.antoine.geometry.Coordinates" method="setPosition">
+							<parameters nbr="2">
+								<paramInjection id="levelTwilight_player_positionX" value="880" method="setX"/>
+								<paramInjection id="levelTwilight_player_positionY" value="300" method="setY"/>
+							</parameters>
+						</injection>
+						<injection id="levelTwilight_player_deplacement" class="com.antoine.transfert_strategy.Player_transferStrategy_std" method="setDeplacement">
+							<parameters nbr="1">
+								<injection id="levelTwilight_player_deplacement_vector" class="com.antoine.geometry.Coordinates" method="setVector">
+									<parameters nbr="2">
+										<paramInjection id="levelTwilight_player_deplacement_vector_directionX" value="4" method="setX"/>
+										<paramInjection id="levelTwilight_player_deplacement_vector_directionY" value="4" method="setY"/>
+									</parameters>
+								</injection>
+							</parameters>
+						</injection>
+					</parameters>
+				</injection>
+				<injection id="levelTwilight_map" class="com.antoine.modele.map.Map" method="setMap">
+					<parameters nbr="2">
+						<parameter id="levelTwilight_map_tileSet" value="/ressources/maps/levelTwilight/tileSet.txt" method="setTileSet"/>
+						<parameter id="levelTwilight_map_mapFilePath" value="/ressources/maps/levelTwilight/map.txt" method="setMap"/>
+					</parameters>
+				</injection>
+				<injection id="levelTwilight_boss" class="com.antoine.entity.Boss" method="setBoss">
+					<parameters nbr="3">
+						<paramInjection id="levelTwilight_boss_animationFilePath" value="/ressources/setPonyAnimation/setDiscord.txt" method="setAnimation"/>
+						<injection id="levelTwilight_boss_position" class="com.antoine.geometry.Coordinates" method="setPosition">
+							<parameters nbr="2">
+								<paramInjection id="levelTwilight_boss_positionX" value="110" method="setX"/>
+								<paramInjection id="levelTwilight_boss_positionY" value="-150" method="setY"/>
+							</parameters>
+						</injection>
+						<injection id="levelTwilight_boss_deplacement" class="com.antoine.transfert_strategy.IA_transfertStrategy_withHeuristic" method="setDeplacement">
+							<parameters nbr="1">
+								<injection id="levelTwilight_boss_deplacement_vector" class="com.antoine.geometry.Coordinates" method="setVector">
+									<parameters nbr="2">
+										<paramInjection id="levelTwilight_boss_deplacement_vector_deplacementX" value="2" method="setX"/>
+										<paramInjection id="levelTwilight_boss_deplacement_vector_deplacementY" value="2" method="setY"/>
+									</parameters>
+								</injection>
+							</parameters>
+						</injection>
+					</parameters>
+				</injection>
+			</parameters>
+		</bean>
+		<bean id="frame" class="com.antoine.vue.frame.Frame">
+			<parameters nbr="3">
+				<injection id="frame_principalPanel" class="com.antoine.vue.panel.SpecialPanel" method="setPrincipalPanel">
+				</injection>
+				<injection id="frame_buttonPanel" class="com.antoine.vue.panel.ButtonPanel" method="setButtonPanel">
+
+				</injection>
+				<injection id="frame_miniMap" class="com.antoine.vue.panel.JMiniMap" method="setMiniMap">
+
+				</injection>
+			</parameters>
+		</bean>
+		<bean id="jukebox" class="com.antoine.manager.musique.Jukebox">
+			<parameters nbr="12">
+				<parameter id="appleMusic" method="setMusic" value="apple,/ressources/sons/musics/01 We Got This Together.wav"/>
+				<parameter id="appleSon" method="setSound" value="apple,/ressources/sons/bruitage/stepSnow.wav"/>
+				<parameter id="rarityMusic" method="setMusic" value="rarity,/ressources/sons/musics/02 I'm the Friend You Need.wav"/>
+				<parameter id="raritySon" method="setSound" value="rarity,/ressources/sons/bruitage/stepSnow.wav"/>
+				<parameter id="rainbowMusic" method="setMusic" value="rainbow,/ressources/sons/musics/03 Time To Be Awesome.wav"/>
+				<parameter id="rainbowSon" method="setSound" value="rainbow,/ressources/sons/bruitage/stepSnow.wav"/>
+				<parameter id="flutterMusic" method="setMusic" value="flutter,/ressources/sons/musics/07 Off To See the World.wav"/>
+				<parameter id="flutterSon" method="setSound" value="flutter,/ressources/sons/bruitage/stepSnow.wav"/>
+				<parameter id="pinkyMusic" method="setMusic" value="pinky,/ressources/sons/musics/04 One Small Thing.wav"/>
+				<parameter id="pinkySon" method="setSound" value="pinky,/ressources/sons/bruitage/stepSnow.wav"/>
+				<parameter id="twilightMusic" method="setMusic" value="twilight,/ressources/sons/musics/Open_Up_Your_Eyes.wav"/>
+				<parameter id="twilightSon" method="setSound" value="twilight,/ressources/sons/bruitage/stepSnow.wav"/>
+			</parameters>
+		</bean>
+	</beans>
+</configuration>

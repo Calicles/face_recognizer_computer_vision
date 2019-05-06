@@ -1,0 +1,14 @@
+13
+0 /ressources/images/levelRarity/ice2.png
+-1 /ressources/images/tapis1.png
+-2 /ressources/images/tapis2.png
+-3 /ressources/images/tapis3.png
+-4 /ressources/images/tapis4.png
+6 /ressources/images/levelRarity/icewall1.png
+7 /ressources/images/levelRarity/icewall2.png
+8 /ressources/images/levelRarity/icewall3.png
+9 /ressources/images/levelRarity/icewall4.png
+10 /ressources/images/levelRarity/icewall5.png
+11 /ressources/images/levelRarity/icewall6.png
+12 /ressources/images/levelRarity/icewall7.png
+13 /ressources/images/levelRarity/icewall8.png

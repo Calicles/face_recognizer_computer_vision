@@ -1,0 +1,13 @@
+4 3
+/ressources/images/pony/pinki/face1.png
+/ressources/images/pony/pinki/face2.png
+/ressources/images/pony/pinki/face3.png
+/ressources/images/pony/pinki/gauche1.png
+/ressources/images/pony/pinki/gauche2.png
+/ressources/images/pony/pinki/gauche3.png
+/ressources/images/pony/pinki/droite1.png
+/ressources/images/pony/pinki/droite2.png
+/ressources/images/pony/pinki/droite3.png
+/ressources/images/pony/pinki/dos1.png
+/ressources/images/pony/pinki/dos2.png
+/ressources/images/pony/pinki/dos3.png

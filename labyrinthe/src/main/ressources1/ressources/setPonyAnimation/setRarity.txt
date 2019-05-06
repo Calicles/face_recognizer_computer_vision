@@ -1,0 +1,13 @@
+4 3
+/ressources/images/pony/rarity/face1.png
+/ressources/images/pony/rarity/face2.png
+/ressources/images/pony/rarity/face3.png
+/ressources/images/pony/rarity/gauche1.png
+/ressources/images/pony/rarity/gauche2.png
+/ressources/images/pony/rarity/gauche3.png
+/ressources/images/pony/rarity/droite1.png
+/ressources/images/pony/rarity/droite2.png
+/ressources/images/pony/rarity/droite3.png
+/ressources/images/pony/rarity/dos1.png
+/ressources/images/pony/rarity/dos2.png
+/ressources/images/pony/rarity/dos3.png

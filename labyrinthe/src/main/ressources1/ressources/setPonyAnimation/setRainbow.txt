@@ -1,0 +1,13 @@
+4 3
+/ressources/images/pony/rainbow/face1.png
+/ressources/images/pony/rainbow/face2.png
+/ressources/images/pony/rainbow/face3.png
+/ressources/images/pony/rainbow/gauche1.png
+/ressources/images/pony/rainbow/gauche2.png
+/ressources/images/pony/rainbow/gauche3.png
+/ressources/images/pony/rainbow/droite1.png
+/ressources/images/pony/rainbow/droite2.png
+/ressources/images/pony/rainbow/droite3.png
+/ressources/images/pony/rainbow/dos1.png
+/ressources/images/pony/rainbow/dos2.png
+/ressources/images/pony/rainbow/dos3.png

@@ -1,0 +1,19 @@
+18
+0 ressources/images/levelApple/herbe.png
+-1 ressources/images/levelApple/herbe.png
+-2 ressources/images/levelApple/herbe.png
+-3 ressources/images/levelApple/herbe.png
+-4 ressources/images/levelApple/herbe.png
+-5 ressources/images/levelApple/herbe.png
+2 ressources/images/levelApple/place1.png
+3 ressources/images/levelApple/place2.png
+4 ressources/images/levelApple/place3.png
+5 ressources/images/levelApple/place4.png
+6 ressources/images/levelApple/wall1.png
+7 ressources/images/levelApple/wall2.png
+8 ressources/images/levelApple/wall3.png
+9 ressources/images/levelApple/wall4.png
+10 ressources/images/levelApple/wall5.png
+11 ressources/images/levelApple/wall6.png
+12 ressources/images/levelApple/wall7.png
+13 ressources/images/levelApple/wall8.png

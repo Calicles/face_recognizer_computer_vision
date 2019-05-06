@@ -1,0 +1,21 @@
+18
+0 /ressources/images/levelTwilight/solPetit.png
+-1 /ressources/images/tapis1.png
+-2 /ressources/images/tapis2.png
+-3 /ressources/images/tapis3.png
+-4 /ressources/images/tapis4.png
+1 /ressources/images/levelTwilight/sol1.png
+2 /ressources/images/levelTwilight/sol2.png
+3 /ressources/images/levelTwilight/sol3.png
+4 /ressources/images/levelTwilight/sol4.png
+6 /ressources/images/levelTwilight/murb.png
+7 /ressources/images/levelTwilight/murb2.png
+8 /ressources/images/levelTwilight/murb3.png
+9 /ressources/images/levelTwilight/murb4.png
+10 /ressources/images/levelTwilight/murb5.png
+11 /ressources/images/levelTwilight/murb6.png
+12 /ressources/images/levelTwilight/murb7.png
+13 /ressources/images/levelTwilight/murb8.png
+14 /ressources/images/levelTwilight/murMid.png
+
+
