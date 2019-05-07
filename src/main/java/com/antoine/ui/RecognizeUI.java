@@ -22,8 +22,10 @@ public class RecognizeUI {
 
     private FaceRecognition faceRecognition;
 
-    Webcam webcam;
+    private Webcam webcam;
     private JFrame window;
+    private JLabel label;
+    private PanelScan panel;
 
 
     public void init() throws Exception {
@@ -37,7 +39,9 @@ public class RecognizeUI {
             webcam = Webcam.getDefault();
             webcam.setViewSize(WebcamResolution.VGA.getSize());
 
-            WebcamPanel panel = new WebcamPanel(webcam);
+
+            //WebcamPanel panel = new WebcamPanel(webcam);
+            panel = new PanelScan(webcam);
             panel.setFPSDisplayed(true);
             panel.setDisplayDebugInfo(true);
             panel.setImageSizeDisplayed(true);
@@ -59,14 +63,14 @@ public class RecognizeUI {
                 throw new RuntimeException();
             }
 
-            JLabel label = new JLabel("Analyse faciale en cours");
+            label = new JLabel("SCANNING");
             label.setBackground(Color.BLACK);
             label.setHorizontalTextPosition(JLabel.CENTER);
             label.setForeground(Color.WHITE);
             JPanel labelContainer = new JPanel();
             labelContainer.add(label);
             labelContainer.setBackground(Color.BLACK);
-            window = new JFrame("Test webcam panel");
+            window = new JFrame("FACIAL RECOGNIZER");
             Container container = window.getContentPane();
             container.setLayout(new BorderLayout());
             container.add(panel, BorderLayout.CENTER);
@@ -84,14 +88,17 @@ public class RecognizeUI {
         new Thread(()->{
             boolean isSame = false;
 
+            panel.startScanning();
+
             while (!isSame)
             {
+
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(2000);
                 } catch (InterruptedException ignored) {}
 
                 try {
-                    ImageIO.write(webcam.getImage(), "PNG", new File("./other.png"));
+                    ImageIO.write(webcam.getImage(), "PNG", new File("./scanning.png"));
                 } catch (IOException e) {
                     log.error("Error writing image", e);
                     throw new RuntimeException();
@@ -99,7 +106,7 @@ public class RecognizeUI {
 
                 String whoIs = null;
                 try {
-                    opencv_core.Mat imread = opencv_imgcodecs.imread(Paths.get("other.png").toAbsolutePath().toUri().getPath());
+                    opencv_core.Mat imread = opencv_imgcodecs.imread(Paths.get("scanning.png").toAbsolutePath().toUri().getPath());
                     whoIs = faceRecognition.whoIs(imread);
                 } catch (IOException e) {
                     log.error("Error scanning", e);
@@ -107,7 +114,18 @@ public class RecognizeUI {
                 }
 
                 isSame = !whoIs.toLowerCase().contains("unknown");
+
+                if (isSame)
+                {
+                    panel.stopScanning();
+                    label.setText("Bonjour " + whoIs);
+                    window.repaint();
+                    try {
+                        Thread.sleep(4000);
+                    } catch (InterruptedException ignored){}
+                }
             }
+            webcam.getDevice().close();
             window.dispose();
 
             JFrame interFram = new JFrame();

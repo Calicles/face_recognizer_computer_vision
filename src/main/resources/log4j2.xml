@@ -7,15 +7,15 @@
         <Console name="stdout" target="SYSTEM_OUT">
             <Layout type="PatternLayout" pattern="${pattern}"/>
         </Console>
-        <File name="FaceRecognition" fileName="camRecognizer.log">
+        <!--<File name="cam" fileName="camRecognizer.log">
             <Layout type="PatternLayout" pattern="${pattern}"/>
-        </File>
+        </File>-->
     </Appenders>
 
     <Loggers>
         <Root level="debug">
             <AppenderRef ref="stdout" level="info"/>
-            <AppenderRef ref="FaceRecognition" level="info"/>
+            <!--<AppenderRef ref="cam" level="info"/>-->
         </Root>
     </Loggers>
 </Configuration>
