@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import com.antoine.dl.FaceRecognition;
 import com.antoine.vue.frame.Frame;
 import com.github.sarxos.webcam.Webcam;
-import com.github.sarxos.webcam.WebcamPanel;
 import com.github.sarxos.webcam.WebcamResolution;
 import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacpp.opencv_imgcodecs;
@@ -26,6 +25,9 @@ public class RecognizeUI {
     private JFrame window;
     private JLabel label;
     private PanelScan panel;
+
+    private final String PHOTOSCANNING_PATH = "./scanning.png";
+    private final String PROFILS_PATH = "./profil";
 
 
     public void init() throws Exception {
@@ -50,17 +52,21 @@ public class RecognizeUI {
             try {
 
 
-                File profil = Paths.get("profil").toFile();
+                File profil = new File(PROFILS_PATH);
                 File[] files = profil.listFiles();
+
+                if (files.length == 0)
+                    showErrorDialog("Pas de profil utilisateur enregistré");
+
                 for (File f : files) {
                     opencv_core.Mat imread = opencv_imgcodecs.imread(f.toURI().getPath());
 
                     faceRecognition.registerNewMember(f.getName().substring(0, f.getName().indexOf('.')), imread);
                 }
             } catch (IOException e) {
-                log.error("Error loading profiles", e);
-                System.exit(0);
-                throw new RuntimeException();
+                String error = "Error loading profiles in model computaion";
+                log.error(error, e);
+                showErrorDialog(error);
             }
 
             label = new JLabel("SCANNING");
@@ -84,33 +90,45 @@ public class RecognizeUI {
 
     }
 
-    public void start(){
+    private void showErrorDialog(String msg) {
+        JFrame errorFrame = new JFrame();
+        PanelDialog dial = new PanelDialog(true);
+        dial.showMessage(msg, errorFrame, true);
+
+        threadSleep(4000);
+
+        errorFrame.dispose();
+        System.exit(0);
+    }
+
+    public void startRecognizer(){
         new Thread(()->{
             boolean isSame = false;
 
             panel.startScanning();
 
+            File photoScanning = new File(PHOTOSCANNING_PATH);
+
             while (!isSame)
             {
+                threadSleep(2000);
 
                 try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException ignored) {}
-
-                try {
-                    ImageIO.write(webcam.getImage(), "PNG", new File("./scanning.png"));
+                    ImageIO.write(webcam.getImage(), "PNG", photoScanning);
                 } catch (IOException e) {
-                    log.error("Error writing image", e);
-                    throw new RuntimeException();
+                    String error = "Error writing image for scanner";
+                    log.error(error, e);
+                    showErrorDialog(error);
                 }
 
                 String whoIs = null;
                 try {
-                    opencv_core.Mat imread = opencv_imgcodecs.imread(Paths.get("scanning.png").toAbsolutePath().toUri().getPath());
+                    opencv_core.Mat imread = opencv_imgcodecs.imread(photoScanning.getAbsolutePath());
                     whoIs = faceRecognition.whoIs(imread);
                 } catch (IOException e) {
-                    log.error("Error scanning", e);
-                    throw new RuntimeException();
+                    String error = "Erreur lors de la reconnaissance";
+                    log.error(error, e);
+                    showErrorDialog(error);
                 }
 
                 isSame = !whoIs.toLowerCase().contains("unknown");
@@ -120,30 +138,41 @@ public class RecognizeUI {
                     panel.stopScanning();
                     label.setText("Bonjour " + whoIs);
                     window.repaint();
-                    try {
-                        Thread.sleep(4000);
-                    } catch (InterruptedException ignored){}
+
+                    threadSleep(4000);
                 }
             }
             webcam.getDevice().close();
             window.dispose();
 
+            photoScanning.delete();
+
             JFrame interFram = new JFrame();
-            com.antoine.ProgressBar analyzing = new com.antoine.ProgressBar(interFram, true);
+            ProgressBar analyzing = new ProgressBar(interFram, true);
             analyzing.showProgressBar("DEVEROUILLAGE");
+
             Executors.newCachedThreadPool().submit(()->{
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException ignored) {}
+
+                threadSleep(5000);
+
                 interFram.dispose();
+
                 try {
                     faceRecognition.serializeModel(Paths.get("save/"));
                 } catch (IOException e) {
-                    log.error("Error Serialing model", e);
+                    log.error("Error Serializing model", e);
                 }
                 new Frame();
             });
+
+
         })
                 .start();
+    }
+
+    private void threadSleep(long timeToSleep){
+        try{
+            Thread.sleep(timeToSleep);
+        }catch (InterruptedException ignored){}
     }
 }

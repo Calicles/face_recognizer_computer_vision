@@ -1,33 +1,59 @@
 package com.antoine.ui;
 
 import javax.swing.*;
+import java.awt.*;
 
+/**
+ * Created by klevis.ramo on 11/29/2017.
+ */
 public class ProgressBar {
 
+    private final JFrame mainFrame;
     private JProgressBar progressBar;
-    private JFrame mainFraim;
-    private boolean undecorated;
+    private boolean unDecoreate = false;
 
-    public ProgressBar(JFrame mainFraim, boolean undecorated)
-    {
-        this.mainFraim = mainFraim;
-        this.undecorated = undecorated;
+    public ProgressBar(JFrame mainFrame) {
+        this.mainFrame = mainFrame;
+        progressBar = createProgressBar(mainFrame);
     }
 
-    public void showProgessBar(String msg)
-    {
-        SwingUtilities.invokeLater(()-> {
-                this.progressBar = new JProgressBar(JProgressBar.HORIZONTAL);
-        progressBar.setString(msg);
-        progressBar.setStringPainted(true);
-        progressBar.setIndeterminate(true);
-        progressBar.setVisible(true);
-        mainFraim.getContentPane().add(progressBar);
-        mainFraim.setLocationRelativeTo(null);
-        mainFraim.setUndecorated(undecorated);
-        mainFraim.pack();
-        mainFraim.setVisible(true);
-        mainFraim.repaint();
+    public ProgressBar(JFrame mainFrame, boolean unDecoreate) {
+        this.mainFrame = mainFrame;
+        progressBar = createProgressBar(mainFrame);
+        this.unDecoreate = unDecoreate;
+    }
+
+    public void showProgressBar(String msg) {
+        SwingUtilities.invokeLater(() -> {
+            if (unDecoreate) {
+                mainFrame.setUndecorated(true);
+            }
+            mainFrame.setLocationRelativeTo(null);
+            progressBar = createProgressBar(mainFrame);
+            progressBar.setString(msg);
+            progressBar.setStringPainted(true);
+            progressBar.setBorderPainted(true);
+            progressBar.setIndeterminate(true);
+            progressBar.setBorder(BorderFactory.createRaisedBevelBorder());
+            progressBar.setBackground(Color.BLACK);
+            progressBar.setForeground(Color.WHITE);
+            progressBar.setVisible(true);
+            mainFrame.add(progressBar, BorderLayout.NORTH);
+            mainFrame.pack();
+            mainFrame.setVisible(true);
+            mainFrame.repaint();
         });
+    }
+
+
+    private JProgressBar createProgressBar(JFrame mainFrame) {
+        JProgressBar jProgressBar = new JProgressBar(JProgressBar.HORIZONTAL);
+        jProgressBar.setVisible(false);
+        mainFrame.add(jProgressBar, BorderLayout.NORTH);
+        return jProgressBar;
+    }
+
+    public void setVisible(boolean visible) {
+        progressBar.setVisible(visible);
     }
 }

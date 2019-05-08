@@ -57,14 +57,19 @@ public class FaceRecognition {
     }
 
     public void loadModel() throws Exception {
+        String modèleChargé = null;
 //        faceNetSmallV2Model = new FaceNetSmallV2Model();
         Path path;
-        if ((path = Paths.get("save/model.zip")).toFile().isFile()) {
+        if ((path = Paths.get("save/modelSaved.zip")).toFile().isFile()) {
             computationGraph = ModelSerializer.restoreComputationGraph(path.toUri().getPath());
-        }else
+            modèleChargé = "modèle enregistré";
+        }else {
             computationGraph = ModelSerializer.restoreComputationGraph(Paths.get("model.zip").toAbsolutePath().toUri().getPath());
-                //faceNetSmallV2Model.init();
+            modèleChargé = "premierModèle";
+            //faceNetSmallV2Model.init();
+        }
         log.info(computationGraph.summary());
+        log.info("modèle chargé :      " + modèleChargé);
     }
 
     public void registerNewMember(String memberId, opencv_core.Mat imageread) throws IOException {
@@ -99,6 +104,7 @@ public class FaceRecognition {
 
     public void serializeModel(Path path) throws IOException {
 
-        ModelSerializer.writeModel(computationGraph, path.toUri().getPath()+"model.zip", false);
+        ModelSerializer.writeModel(computationGraph, path.toUri().getPath()+"modelSaved.zip", false);
+        log.info("Modèle enregistré");
     }
 }
