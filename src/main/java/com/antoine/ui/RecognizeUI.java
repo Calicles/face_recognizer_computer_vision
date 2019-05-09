@@ -37,20 +37,29 @@ public class RecognizeUI {
         this.absoluteProgrammePath = absoluteProgrammePath;
     }
 
-
-    public void init()
+    public void initWindow()
     {
-        try
-        {
-            faceRecognition = new FaceRecognition();
-            faceRecognition.loadModel(absoluteProgrammePath);
-        }catch (Throwable t)
-        {
-            String error = "Erreur de chargement du modèle de deep learning";
-            log.debug(error, t);
-            showErrorDialog(error, true);
-        }
+        label = new JLabel("SCANNING");
+        label.setBackground(Color.BLACK);
+        label.setHorizontalTextPosition(JLabel.CENTER);
+        label.setForeground(Color.WHITE);
+        JPanel labelContainer = new JPanel();
+        labelContainer.add(label);
+        labelContainer.setBackground(Color.BLACK);
+        window = new JFrame("FACIAL RECOGNIZER");
+        Container container = window.getContentPane();
+        container.setLayout(new BorderLayout());
+        container.add(panel, BorderLayout.CENTER);
+        container.add(labelContainer, BorderLayout.SOUTH);
+        window.setResizable(false);
+        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        window.pack();
+        window.setVisible(true);
+    }
 
+
+    public void initWebCam()
+    {
         try {
             webcam = Webcam.getDefault();
             webcam.setViewSize(WebcamResolution.VGA.getSize());
@@ -64,6 +73,21 @@ public class RecognizeUI {
         }catch (Throwable t)
         {
             String error = "erruer de detection de la webcam";
+            log.debug(error, t);
+            showErrorDialog(error, true);
+        }
+    }
+
+
+    public void loadModel()
+    {
+        try
+        {
+            faceRecognition = new FaceRecognition();
+            faceRecognition.loadModel(absoluteProgrammePath);
+        }catch (Throwable t)
+        {
+            String error = "Erreur de chargement du modèle de deep learning";
             log.debug(error, t);
             showErrorDialog(error, true);
         }
@@ -95,27 +119,10 @@ public class RecognizeUI {
             log.error(error, e);
             showErrorDialog(error, true);
         }
-
-        label = new JLabel("SCANNING");
-        label.setBackground(Color.BLACK);
-        label.setHorizontalTextPosition(JLabel.CENTER);
-        label.setForeground(Color.WHITE);
-        JPanel labelContainer = new JPanel();
-        labelContainer.add(label);
-        labelContainer.setBackground(Color.BLACK);
-        window = new JFrame("FACIAL RECOGNIZER");
-        Container container = window.getContentPane();
-        container.setLayout(new BorderLayout());
-        container.add(panel, BorderLayout.CENTER);
-        container.add(labelContainer, BorderLayout.SOUTH);
-        window.setResizable(false);
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.pack();
-        window.setVisible(true);
     }
 
 
-    private void showErrorDialog(String msg, boolean haveToExitSystem)
+    public static void showErrorDialog(String msg, boolean haveToExitSystem)
     {
         JFrame errorFrame = new JFrame();
         PanelDialog dial = new PanelDialog(true);
@@ -124,6 +131,7 @@ public class RecognizeUI {
         threadSleep(4000);
 
         errorFrame.dispose();
+
         if (haveToExitSystem)
             System.exit(0);
     }
@@ -178,7 +186,7 @@ public class RecognizeUI {
 
             JFrame interFram = new JFrame();
             ProgressBar analyzing = new ProgressBar(interFram, true);
-            analyzing.showProgressBar("DEVEROUILLAGE");
+            analyzing.showProgressBar("DEVEROUILLAGE", Color.GREEN);
 
             Executors.newCachedThreadPool().submit(()->{
 
@@ -201,7 +209,7 @@ public class RecognizeUI {
                 .start();
     }
 
-    private void threadSleep(long timeToSleep){
+    private static void threadSleep(long timeToSleep){
         try{
             Thread.sleep(timeToSleep);
         }catch (InterruptedException ignored){}
