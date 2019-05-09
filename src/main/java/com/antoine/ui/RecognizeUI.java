@@ -13,6 +13,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executors;
 
@@ -26,8 +29,8 @@ public class RecognizeUI {
     private JLabel label;
     private PanelScan panel;
 
-    private final String PHOTOSCANNING_PATH = "./scanning.png";
-    private final String PROFILS_PATH = "./profil";
+    private final String PHOTOSCANNING = "scanning.png";
+    private final String PROFILS_FILE = "profil";
 
 
     public void init() throws Exception {
@@ -41,32 +44,39 @@ public class RecognizeUI {
             webcam = Webcam.getDefault();
             webcam.setViewSize(WebcamResolution.VGA.getSize());
 
-
-            //WebcamPanel panel = new WebcamPanel(webcam);
             panel = new PanelScan(webcam);
             panel.setFPSDisplayed(true);
             panel.setDisplayDebugInfo(true);
             panel.setImageSizeDisplayed(true);
             panel.setMirrored(true);
 
-            try {
+            try
+            {
+                FileSystem fileSystem = FileSystems.getDefault();
+                Path profilsPath = fileSystem.getPath(PROFILS_FILE);
 
+                if (!profilsPath.toFile().exists())
+                {
+                    profilsPath.toFile().mkdir();
+                    showErrorDialog("Dossier profil inexistant, Création en cours, vous devrez enregistrer un profil", true);
+                }
 
-                File profil = new File(PROFILS_PATH);
-                File[] files = profil.listFiles();
+                File[] files = profilsPath.toFile().listFiles();
 
                 if (files.length == 0)
-                    showErrorDialog("Pas de profil utilisateur enregistré");
+                    showErrorDialog("Pas de profil utilisateur enregistré", true);
 
-                for (File f : files) {
+                for (File f : files)
+                {
                     opencv_core.Mat imread = opencv_imgcodecs.imread(f.toURI().getPath());
 
                     faceRecognition.registerNewMember(f.getName().substring(0, f.getName().indexOf('.')), imread);
                 }
-            } catch (IOException e) {
+            } catch (IOException e)
+            {
                 String error = "Error loading profiles in model computaion";
                 log.error(error, e);
-                showErrorDialog(error);
+                showErrorDialog(error, true);
             }
 
             label = new JLabel("SCANNING");
@@ -82,7 +92,6 @@ public class RecognizeUI {
             container.add(panel, BorderLayout.CENTER);
             container.add(labelContainer, BorderLayout.SOUTH);
             window.setResizable(false);
-            //window.setLocationRelativeTo(null);
             window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             window.pack();
             window.setVisible(true);
@@ -90,7 +99,9 @@ public class RecognizeUI {
 
     }
 
-    private void showErrorDialog(String msg) {
+    
+    private void showErrorDialog(String msg, boolean haveToExitSystem)
+    {
         JFrame errorFrame = new JFrame();
         PanelDialog dial = new PanelDialog(true);
         dial.showMessage(msg, errorFrame, true);
@@ -98,16 +109,19 @@ public class RecognizeUI {
         threadSleep(4000);
 
         errorFrame.dispose();
-        System.exit(0);
+        if (haveToExitSystem)
+            System.exit(0);
     }
 
-    public void startRecognizer(){
+
+    public void startRecognizer()
+    {
         new Thread(()->{
             boolean isSame = false;
 
             panel.startScanning();
 
-            File photoScanning = new File(PHOTOSCANNING_PATH);
+            File photoScanning = new File(PHOTOSCANNING);
 
             while (!isSame)
             {
@@ -118,7 +132,7 @@ public class RecognizeUI {
                 } catch (IOException e) {
                     String error = "Error writing image for scanner";
                     log.error(error, e);
-                    showErrorDialog(error);
+                    showErrorDialog(error, true);
                 }
 
                 String whoIs = null;
@@ -128,7 +142,7 @@ public class RecognizeUI {
                 } catch (IOException e) {
                     String error = "Erreur lors de la reconnaissance";
                     log.error(error, e);
-                    showErrorDialog(error);
+                    showErrorDialog(error, true);
                 }
 
                 isSame = !whoIs.toLowerCase().contains("unknown");
@@ -153,16 +167,18 @@ public class RecognizeUI {
 
             Executors.newCachedThreadPool().submit(()->{
 
-                threadSleep(5000);
-
-                interFram.dispose();
+                threadSleep(2000);
 
                 try {
                     faceRecognition.serializeModel(Paths.get("save/"));
-                } catch (IOException e) {
+                } catch (IOException e)
+                {
                     log.error("Error Serializing model", e);
+                    showErrorDialog("Erreur d'enregistrement du modèle de Deep Learning", false);
                 }
                 new Frame();
+
+                interFram.dispose();
             });
 
 
