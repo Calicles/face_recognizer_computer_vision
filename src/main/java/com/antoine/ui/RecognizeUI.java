@@ -1,12 +1,13 @@
 package com.antoine.ui;
 
-import lombok.extern.slf4j.Slf4j;
 import com.antoine.dl.FaceRecognition;
 import com.antoine.vue.frame.Frame;
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.WebcamResolution;
 import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacpp.opencv_imgcodecs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -19,8 +20,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.Executors;
 
-@Slf4j
 public class RecognizeUI {
+
+    private static Logger log = LoggerFactory.getLogger(com.antoine.ui.RecognizeUI.class);
+
+    private String absoluteProgrammePath;
 
     private FaceRecognition faceRecognition;
 
@@ -32,14 +36,16 @@ public class RecognizeUI {
     private final String PHOTOSCANNING = "scanning.png";
     private final String PROFILS_FILE = "profil";
 
+    public RecognizeUI(String absoluteProgrammePath)
+    {
+        this.absoluteProgrammePath = absoluteProgrammePath;
+    }
 
-    public void init() throws Exception {
 
-
-
+    public void init() throws Exception
+    {
             faceRecognition = new FaceRecognition();
-            faceRecognition.loadModel();
-
+            faceRecognition.loadModel(absoluteProgrammePath);
 
             webcam = Webcam.getDefault();
             webcam.setViewSize(WebcamResolution.VGA.getSize());
@@ -52,16 +58,15 @@ public class RecognizeUI {
 
             try
             {
-                FileSystem fileSystem = FileSystems.getDefault();
-                Path profilsPath = fileSystem.getPath(PROFILS_FILE);
+                File profil = new File(absoluteProgrammePath, PROFILS_FILE);
 
-                if (!profilsPath.toFile().exists())
+                if (!profil.exists())
                 {
-                    profilsPath.toFile().mkdir();
+                    profil.mkdir();
                     showErrorDialog("Dossier profil inexistant, Création en cours, vous devrez enregistrer un profil", true);
                 }
 
-                File[] files = profilsPath.toFile().listFiles();
+                File[] files = profil.listFiles();
 
                 if (files.length == 0)
                     showErrorDialog("Pas de profil utilisateur enregistré", true);
@@ -95,11 +100,9 @@ public class RecognizeUI {
             window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             window.pack();
             window.setVisible(true);
-
-
     }
 
-    
+
     private void showErrorDialog(String msg, boolean haveToExitSystem)
     {
         JFrame errorFrame = new JFrame();
@@ -170,7 +173,7 @@ public class RecognizeUI {
                 threadSleep(2000);
 
                 try {
-                    faceRecognition.serializeModel(Paths.get("save/"));
+                    faceRecognition.serializeModel(Paths.get(absoluteProgrammePath));
                 } catch (IOException e)
                 {
                     log.error("Error Serializing model", e);

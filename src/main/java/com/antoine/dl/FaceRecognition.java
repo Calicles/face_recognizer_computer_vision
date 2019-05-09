@@ -1,6 +1,5 @@
 package com.antoine.dl;
 
-import lombok.extern.slf4j.Slf4j;
 import org.bytedeco.javacpp.opencv_core;
 import org.datavec.image.loader.NativeImageLoader;
 import org.deeplearning4j.nn.graph.ComputationGraph;
@@ -10,15 +9,19 @@ import org.deeplearning4j.util.ModelSerializer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.indexing.NDArrayIndex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-@Slf4j
 public class FaceRecognition {
+
+    private static Logger log = LoggerFactory.getLogger(com.antoine.dl.FaceRecognition.class);
 
     private static final double THRESHOLD = 0.50;
     //private FaceNetSmallV2Model faceNetSmallV2Model;
@@ -56,14 +59,18 @@ public class FaceRecognition {
         return a.distance2(b);
     }
 
-    public void loadModel() throws Exception {
+    public void loadModel(String absoluteProgrammePath) throws Exception {
         String modèleChargé = null;
 //        faceNetSmallV2Model = new FaceNetSmallV2Model();
-        Path path;
-        if ((path = Paths.get("save/modelSaved.zip")).toFile().isFile()) {
-            computationGraph = ModelSerializer.restoreComputationGraph(path.toUri().getPath());
+        File parent = new File(absoluteProgrammePath);
+        File modelFile;
+        if ((modelFile = new File(parent, "save")).exists())
+        {
+            modelFile = modelFile.listFiles()[0];
+            computationGraph = ModelSerializer.restoreComputationGraph(modelFile.getPath());
             modèleChargé = "modèle enregistré";
         }else {
+            modelFile = new File(parent, "model.zip");
             computationGraph = ModelSerializer.restoreComputationGraph(Paths.get("model.zip").toAbsolutePath().toUri().getPath());
             modèleChargé = "premierModèle";
             //faceNetSmallV2Model.init();
@@ -102,9 +109,10 @@ public class FaceRecognition {
         return foundUser;
     }
 
-    public void serializeModel(Path path) throws IOException {
+    public void serializeModel(String absoluteProgrammePath) throws IOException {
 
-        ModelSerializer.writeModel(computationGraph, path.toUri().getPath()+"modelSaved.zip", false);
+        File modelSavedPath = new File(absoluteProgrammePath, "save");
+        ModelSerializer.writeModel(computationGraph, modelSavedPath.getPath()+"modelSaved.zip", false);
         log.info("Modèle enregistré");
     }
 }

@@ -1,6 +1,5 @@
 package com.antoine.dl;
 
-import lombok.extern.slf4j.Slf4j;
 import org.deeplearning4j.nn.api.Layer;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.ConvolutionMode;
@@ -24,8 +23,8 @@ import java.util.stream.Collectors;
 import static com.antoine.dl.FaceNetSmallV2Model.paddingIndex;
 import static com.antoine.dl.FaceNetSmallV2Model.reluIndex;
 
-@Slf4j
 public class FaceNetSmallV2Helper {
+
     static final String BASE = FaceNetSmallV2Helper.class.getResource("/resources/face/").getPath();
 
     static ActivationLayer relu() {
