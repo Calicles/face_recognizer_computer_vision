@@ -24,7 +24,7 @@ public class FaceRecognition {
     private static Logger log = LoggerFactory.getLogger(com.antoine.dl.FaceRecognition.class);
 
     private static final double THRESHOLD = 0.50;
-    //private FaceNetSmallV2Model faceNetSmallV2Model;
+    private FaceNetSmallV2Model faceNetSmallV2Model;
     private ComputationGraph computationGraph;
     private static final NativeImageLoader LOADER = new NativeImageLoader(96, 96, 3);
     private final HashMap<String, INDArray> memberEncodingsMap = new HashMap<>();
@@ -61,7 +61,6 @@ public class FaceRecognition {
 
     public void loadModel(String absoluteProgrammePath) throws Exception {
         String modèleChargé = null;
-//        faceNetSmallV2Model = new FaceNetSmallV2Model();
         File parent = new File(absoluteProgrammePath);
         File modelFile;
         if ((modelFile = new File(parent, "save")).exists())
@@ -71,9 +70,14 @@ public class FaceRecognition {
             modèleChargé = "modèle enregistré";
         }else {
             modelFile = new File(parent, "model.zip");
-            computationGraph = ModelSerializer.restoreComputationGraph(Paths.get("model.zip").toAbsolutePath().toUri().getPath());
-            modèleChargé = "premierModèle";
-            //faceNetSmallV2Model.init();
+            if (modelFile.exists()) {
+                computationGraph = ModelSerializer.restoreComputationGraph(Paths.get("model.zip").toAbsolutePath().toUri().getPath());
+                modèleChargé = "premierModèle";
+            }else {
+                faceNetSmallV2Model = new FaceNetSmallV2Model();
+                computationGraph= faceNetSmallV2Model.init();
+                modèleChargé = "modèle recréé";
+            }
         }
         log.info(computationGraph.summary());
         log.info("modèle chargé :      " + modèleChargé);
@@ -109,10 +113,14 @@ public class FaceRecognition {
         return foundUser;
     }
 
-    public void serializeModel(String absoluteProgrammePath) throws IOException {
+    public void serializeModel(String absoluteProgrammePath) throws IOException
+    {
+        File save = new File(absoluteProgrammePath, "save");
+        if (!save.exists())
+            save.mkdir();
 
-        File modelSavedPath = new File(absoluteProgrammePath, "save");
-        ModelSerializer.writeModel(computationGraph, modelSavedPath.getPath()+"modelSaved.zip", false);
+        save = new File(save, "modelSaved.zip");
+        ModelSerializer.writeModel(computationGraph, save.getAbsolutePath(), false);
         log.info("Modèle enregistré");
     }
 }

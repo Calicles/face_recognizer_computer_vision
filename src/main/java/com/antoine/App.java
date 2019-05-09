@@ -2,6 +2,8 @@ package com.antoine;
 
 import com.antoine.ui.ProgressBar;
 import com.antoine.ui.RecognizeUI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 
@@ -17,6 +19,8 @@ import java.util.concurrent.Executors;
  */
 public class App
 {
+
+    private static Logger log = LoggerFactory.getLogger(com.antoine.App.class);
 
     public static void main( String[] args ) {
 
@@ -35,24 +39,11 @@ public class App
         RecognizeUI ui = new RecognizeUI(absoluteProgrammPath);
 
         Executors.newCachedThreadPool().submit(() -> {
-            try {
-                ui.init();
-                ui.startRecognizer();
-            } catch (Throwable e) {
-                JFrame frame = new JFrame("test");
-                JLabel label = new JLabel(e.getMessage());
-                JPanel p = new JPanel();
-                p.add(label);
-                frame.getContentPane().add(p);
-                frame.pack();
-                frame.setVisible(true);
 
+            ui.init();
+            ui.startRecognizer();
 
-                //log.error("Loding Data error", e);
-                throw new RuntimeException();
-            } finally {
-                mainFraim.dispose();
-            }
+            mainFraim.dispose();
         });
     }
 }

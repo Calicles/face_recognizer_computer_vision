@@ -28,17 +28,11 @@ public class PanelScan extends WebcamPanel {
 
             Color old = g.getColor();
 
-            Color newColor = new Color(.8f, .8f, 0.8f, .5f);
+            Color newColor = new Color(1f, 1f, 1f, .4f);
 
             g.setColor(newColor);
 
-            //g.translate(this.getX(), this.getY());
-
-            //g.drawLine(0, y, this.getWidth(), y);
-
             g.fillRect(0, y, this.getWidth(), 20);
-
-            //graphics2D.draw(new Rectangle(new Point(0, y), new Dimension(this.getWidth(), 20)));
 
             if (movingUp) {
                 y -= SPEED;
