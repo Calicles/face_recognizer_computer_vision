@@ -38,7 +38,7 @@ public class App
 
         JFrame mainFraim = new JFrame();
         ProgressBar progressBar = new ProgressBar(mainFraim, true);
-        progressBar.showProgressBar(loadingState + "component");
+        progressBar.showProgressBar(loadingState + "component", null);
         RecognizeUI ui = new RecognizeUI(absoluteProgrammPath);
 
         Executors.newCachedThreadPool().submit(() -> {
@@ -46,6 +46,8 @@ public class App
             {
                 progressBar.updateLoadingState(loadingState + "model");
                 ui.loadModel();
+                progressBar.updateLoadingState(loadingState + "profils");
+                ui.loadProfils();
                 progressBar.updateLoadingState(loadingState + "webcam");
                 ui.initWebCam();
                 progressBar.updateLoadingState(loadingState + "data");
@@ -55,11 +57,12 @@ public class App
 
             }catch (Throwable t)
             {
-                RecognizeUI.showErrorDialog("Erreur de chargement des données", true);
-            }finally
-            {
                 mainFraim.dispose();
+                RecognizeUI.showErrorDialog("Erreur de chargement des données: " + t, true);
             }
+
+            mainFraim.dispose();
+
         });
     }
 }

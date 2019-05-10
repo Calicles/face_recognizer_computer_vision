@@ -1,5 +1,7 @@
 package com.antoine.dl;
 
+import com.antoine.io.IOHelper;
+import org.apache.commons.io.FileUtils;
 import org.bytedeco.javacpp.opencv_core;
 import org.datavec.image.loader.NativeImageLoader;
 import org.deeplearning4j.nn.graph.ComputationGraph;
@@ -14,10 +16,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.Adler32;
 
 public class FaceRecognition {
 
@@ -28,6 +30,9 @@ public class FaceRecognition {
     private ComputationGraph computationGraph;
     private static final NativeImageLoader LOADER = new NativeImageLoader(96, 96, 3);
     private final HashMap<String, INDArray> memberEncodingsMap = new HashMap<>();
+    private final String SAVE_FILE = "save";
+    private final String MODELSAVED_FILE = "modelSaved.zip";
+    private final String CHECKSUM_FILE = "lastChecksum.txt";
 
     private INDArray transpose(INDArray indArray1) {
         INDArray one = Nd4j.create(new int[]{1, 96, 96});
@@ -60,27 +65,24 @@ public class FaceRecognition {
     }
 
     public void loadModel(String absoluteProgrammePath) throws Exception {
-        String modèleChargé = null;
-        File parent = new File(absoluteProgrammePath);
-        File modelFile;
-        if ((modelFile = new File(parent, "save")).exists())
+        String modelLoaded = null;
+        File data = Paths.get(absoluteProgrammePath, SAVE_FILE, MODELSAVED_FILE).toFile();
+        File lastChecksumFile = Paths.get(absoluteProgrammePath, SAVE_FILE, CHECKSUM_FILE).toFile();
+
+        if (data.exists()
+                && lastChecksumFile.exists()
+                && FileUtils.checksum(data, new Adler32()).getValue() == Long.parseLong(IOHelper.readFile(lastChecksumFile)))
         {
-            modelFile = modelFile.listFiles()[0];
-            computationGraph = ModelSerializer.restoreComputationGraph(modelFile.getPath());
-            modèleChargé = "modèle enregistré";
+                computationGraph = ModelSerializer.restoreComputationGraph(data.getAbsolutePath());
+                modelLoaded = "modèle enregistré";
+
         }else {
-            modelFile = new File(parent, "model.zip");
-            if (modelFile.exists()) {
-                computationGraph = ModelSerializer.restoreComputationGraph(Paths.get("model.zip").toAbsolutePath().toUri().getPath());
-                modèleChargé = "premierModèle";
-            }else {
                 faceNetSmallV2Model = new FaceNetSmallV2Model();
                 computationGraph= faceNetSmallV2Model.init();
-                modèleChargé = "modèle recréé";
-            }
+                modelLoaded = "modèle recréé";
         }
         log.info(computationGraph.summary());
-        log.info("modèle chargé :      " + modèleChargé);
+        log.info("modèle chargé :      " + modelLoaded);
     }
 
     public void registerNewMember(String memberId, opencv_core.Mat imageread) throws IOException {
@@ -115,12 +117,17 @@ public class FaceRecognition {
 
     public void serializeModel(String absoluteProgrammePath) throws IOException
     {
-        File save = new File(absoluteProgrammePath, "save");
+        File save = new File(absoluteProgrammePath, SAVE_FILE), checksumFile;
+        long checksum;
         if (!save.exists())
             save.mkdir();
 
-        save = new File(save, "modelSaved.zip");
+        save = new File(save, MODELSAVED_FILE);
+        checksumFile = new File(save.getParent(), CHECKSUM_FILE);
         ModelSerializer.writeModel(computationGraph, save.getAbsolutePath(), false);
+        checksum = FileUtils.checksum(save, new Adler32()).getValue();
+        IOHelper.writeFile(checksumFile, ""+checksum);
+
         log.info("Modèle enregistré");
     }
 }

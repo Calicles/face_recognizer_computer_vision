@@ -1,0 +1,38 @@
+package com.antoine.io;
+
+import java.io.*;
+
+public class IOHelper {
+
+    public static String readFile(File file)
+    {
+        StringBuffer data = new StringBuffer();
+        try (BufferedReader reader = new BufferedReader(
+                new FileReader(file)))
+        {
+            String buff = reader.readLine();
+            while (buff != null)
+            {
+                data.append(buff);
+                buff = reader.readLine();
+            }
+
+        }catch (Throwable throwable) {
+            throw new RuntimeException(throwable);
+        }
+        return data.toString();
+    }
+
+
+    public static void writeFile(File file, String data)
+    {
+        try(BufferedWriter writer =  new BufferedWriter(
+                new FileWriter(file)))
+        {
+            writer.write(data);
+
+        }catch(Throwable throwable){
+            throw new RuntimeException(throwable);
+        }
+    }
+}

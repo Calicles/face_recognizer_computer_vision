@@ -1,21 +1,19 @@
 package com.antoine.ui;
 
 import com.github.sarxos.webcam.Webcam;
-import com.github.sarxos.webcam.WebcamPanel;
 
 import java.awt.*;
 
-public class PanelScan extends WebcamPanel {
+public class PanelScan extends WebcamPanelDecorated {
 
     private final int SPEED = 3;
     private int y;
-    private boolean movingUp, scanning;
+    private boolean movingUp;
 
     public PanelScan(Webcam webcam) {
-        super(webcam);
+        super(webcam, false);
         y = 0;
         movingUp = false;
-        scanning = false;
     }
 
     @Override
@@ -46,20 +44,9 @@ public class PanelScan extends WebcamPanel {
                 movingUp = true;
             }
 
-            g.setColor(Color.BLACK);
-
-            g.drawOval(this.getWidth() / 4, this.getHeight() / 10, this.getWidth() / 2, this.getHeight() - (this.getHeight() / 6));
-
-
             g.setColor(old);
         }
     }
 
-    public void startScanning(){
-        scanning = true;
-    }
 
-    public void stopScanning(){
-        scanning = false;
-    }
 }

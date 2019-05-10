@@ -1,6 +1,7 @@
 package com.antoine.ui;
 
 import com.antoine.dl.FaceRecognition;
+import com.antoine.photoRegister.Photo;
 import com.antoine.vue.frame.Frame;
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.WebcamResolution;
@@ -15,6 +16,8 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class RecognizeUI {
 
@@ -29,7 +32,7 @@ public class RecognizeUI {
     private JLabel label;
     private PanelScan panel;
 
-    private final String PHOTOSCANNING = "scanning.png";
+    private final String PHOTOSCANNING_FILE = "scanning.png";
     private final String PROFILS_FILE = "profil";
 
     public RecognizeUI(String absoluteProgrammePath)
@@ -39,7 +42,7 @@ public class RecognizeUI {
 
     public void initWindow()
     {
-        label = new JLabel("SCANNING");
+        label = new JLabel("SCANNING - Placez votre visage dans le guide");
         label.setBackground(Color.BLACK);
         label.setHorizontalTextPosition(JLabel.CENTER);
         label.setForeground(Color.WHITE);
@@ -72,52 +75,45 @@ public class RecognizeUI {
 
         }catch (Throwable t)
         {
-            String error = "erruer de detection de la webcam";
+            String error = "webcam non détéctée";
             log.debug(error, t);
-            showErrorDialog(error, true);
+            throw new RuntimeException(error);
         }
     }
 
 
-    public void loadModel()
-    {
-        try
+    public void loadModel() throws Exception {
+        faceRecognition = new FaceRecognition();
+        faceRecognition.loadModel(absoluteProgrammePath);
+    }
+
+    public void loadProfils() throws IOException, InterruptedException {
+
+        File profil = new File(absoluteProgrammePath, PROFILS_FILE);
+
+        if (!profil.exists() || profil.list().length == 0)
         {
-            faceRecognition = new FaceRecognition();
-            faceRecognition.loadModel(absoluteProgrammePath);
-        }catch (Throwable t)
-        {
-            String error = "Erreur de chargement du modèle de deep learning";
-            log.debug(error, t);
-            showErrorDialog(error, true);
+         /*   profil.mkdir();
+            throw new RuntimeException("Dossier profil inexistant, création en cours, Veuillez enregistrer un profil avec le PhotoRegister");*/
+         showErrorDialog("Pas de profile enregistré, lancement automatique du programme PhotoRegister", false);
+            Lock lock = new ReentrantLock();
+         Photo photo = new Photo(absoluteProgrammePath);
+         photo.init(lock);
+
+         synchronized (lock){
+             lock.wait();
+         }
+
+            log.info("reprise du programme");
         }
 
-        try
+        File[] files = profil.listFiles();
+
+        for (File f : files)
         {
-            File profil = new File(absoluteProgrammePath, PROFILS_FILE);
+            opencv_core.Mat imread = opencv_imgcodecs.imread(f.toURI().getPath());
 
-            if (!profil.exists())
-            {
-                profil.mkdir();
-                showErrorDialog("Dossier profil inexistant, Création en cours, vous devrez enregistrer un profil avec le PhotoRegister", true);
-            }
-
-            File[] files = profil.listFiles();
-
-            if (files.length == 0)
-                showErrorDialog("Pas de profil utilisateur enregistré", true);
-
-            for (File f : files)
-            {
-                opencv_core.Mat imread = opencv_imgcodecs.imread(f.toURI().getPath());
-
-                faceRecognition.registerNewMember(f.getName().substring(0, f.getName().indexOf('.')), imread);
-            }
-        } catch (IOException e)
-        {
-            String error = "Error loading profiles in model computaion";
-            log.error(error, e);
-            showErrorDialog(error, true);
+            faceRecognition.registerNewMember(f.getName().substring(0, f.getName().indexOf('.')), imread);
         }
     }
 
@@ -128,7 +124,7 @@ public class RecognizeUI {
         PanelDialog dial = new PanelDialog(true);
         dial.showMessage(msg, errorFrame, true);
 
-        threadSleep(4000);
+        threadSleep(6000);
 
         errorFrame.dispose();
 
@@ -140,69 +136,72 @@ public class RecognizeUI {
     public void startRecognizer()
     {
         new Thread(()->{
-            boolean isSame = false;
-
-            panel.startScanning();
-
-            File photoScanning = new File(PHOTOSCANNING);
-
-            while (!isSame)
-            {
-                threadSleep(2000);
-
-                try {
-                    ImageIO.write(webcam.getImage(), "PNG", photoScanning);
-                } catch (IOException e) {
-                    String error = "Error writing image for scanner";
-                    log.error(error, e);
-                    showErrorDialog(error, true);
-                }
-
+            try {
+                boolean isSame = false;
+                File photoScanning = new File(PHOTOSCANNING_FILE);
                 String whoIs = null;
-                try {
-                    opencv_core.Mat imread = opencv_imgcodecs.imread(photoScanning.getAbsolutePath());
-                    whoIs = faceRecognition.whoIs(imread);
-                } catch (IOException e) {
-                    String error = "Erreur lors de la reconnaissance";
-                    log.error(error, e);
-                    showErrorDialog(error, true);
+
+                panel.startScanning();
+
+                while (!isSame) {
+                    threadSleep(2000);
+
+                    try {
+                        ImageIO.write(webcam.getImage(), "PNG", photoScanning);
+                    } catch (IOException e) {
+                        String error = "Error writing image for scanner";
+                        log.error(error, e);
+                        showErrorDialog(error, true);
+                    }
+
+                    try {
+                        opencv_core.Mat imread = opencv_imgcodecs.imread(photoScanning.getAbsolutePath());
+                        whoIs = faceRecognition.whoIs(imread);
+                    } catch (IOException e) {
+                        String error = "Erreur lors de la reconnaissance";
+                        log.error(error, e);
+                        showErrorDialog(error, true);
+                    }
+
+                    isSame = !whoIs.toLowerCase().contains("unknown");
+
+                    if (isSame) {
+                        panel.stopScanning();
+                        label.setText("Bonjour " + whoIs);
+                        window.repaint();
+
+                        threadSleep(4000);
+                    }
                 }
+                window.dispose();
+                webcam.close();
+                photoScanning.delete();
 
-                isSame = !whoIs.toLowerCase().contains("unknown");
+                JFrame interFram = new JFrame();
+                ProgressBar analyzing = new ProgressBar(interFram, true);
+                analyzing.showProgressBar("DEVEROUILLAGE", Color.GREEN);
 
-                if (isSame)
-                {
-                    panel.stopScanning();
-                    label.setText("Bonjour " + whoIs);
-                    window.repaint();
+                Executors.newCachedThreadPool().submit(() -> {
 
-                    threadSleep(4000);
-                }
+                    threadSleep(2000);
+
+                    try {
+                        faceRecognition.serializeModel(absoluteProgrammePath);
+                    } catch (IOException e) {
+                        interFram.setVisible(false);
+                        log.error("Error Serializing model", e);
+                        showErrorDialog("Erreur d'enregistrement du modèle de Deep Learning", false);
+                    }finally {
+                        new Frame();
+                        interFram.dispose();
+                    }
+                });
+
+            }catch (Throwable throwable)
+            {
+                log.info("", throwable);
+                showErrorDialog("erreur: " + throwable.getMessage(), true);
             }
-            window.dispose();
-            webcam.close();
-
-            photoScanning.delete();
-
-            JFrame interFram = new JFrame();
-            ProgressBar analyzing = new ProgressBar(interFram, true);
-            analyzing.showProgressBar("DEVEROUILLAGE", Color.GREEN);
-
-            Executors.newCachedThreadPool().submit(()->{
-
-                threadSleep(2000);
-
-                try {
-                    faceRecognition.serializeModel(absoluteProgrammePath);
-                } catch (IOException e)
-                {
-                    log.error("Error Serializing model", e);
-                    showErrorDialog("Erreur d'enregistrement du modèle de Deep Learning", false);
-                }
-                new Frame();
-
-                interFram.dispose();
-            });
 
 
         })
