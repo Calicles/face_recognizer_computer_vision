@@ -58,6 +58,7 @@ public class App
             }catch (Throwable t)
             {
                 mainFraim.dispose();
+                log.info("", t);
                 RecognizeUI.showErrorDialog("Erreur de chargement des données: " + t, true);
             }
 

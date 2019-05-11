@@ -6,6 +6,7 @@
 
   <groupId>com.antoine</groupId>
   <artifactId>cam</artifactId>
+  <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
 
   <name>cam</name>
@@ -192,7 +193,7 @@
     
     <resources>
       <resource>
-        <directory>resources</directory>
+        <directory>resources1</directory>
       </resource>
     </resources>
   </build>

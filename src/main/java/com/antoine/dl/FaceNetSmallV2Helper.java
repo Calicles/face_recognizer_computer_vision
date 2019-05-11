@@ -1,5 +1,6 @@
 package com.antoine.dl;
 
+import com.antoine.io.IOHelper;
 import org.deeplearning4j.nn.api.Layer;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.ConvolutionMode;
@@ -13,19 +14,17 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.antoine.dl.FaceNetSmallV2Model.paddingIndex;
 import static com.antoine.dl.FaceNetSmallV2Model.reluIndex;
 
 public class FaceNetSmallV2Helper {
 
-    static final String BASE = FaceNetSmallV2Helper.class.getResource("/resources/face/").getPath();
+    static final String BASE = "/resources/face/";
+
 
     static ActivationLayer relu() {
         return new ActivationLayer.Builder().activation(Activation.RELU).build();
@@ -113,9 +112,10 @@ public class FaceNetSmallV2Helper {
         return "relu" + (reluIndex - 1);
     }
 
-    static double[] readWightsValues(String path) throws IOException {
-        String collect = Files.lines(Paths.get(path))
-                .collect(Collectors.joining(","));
+    static double[] readWightsValues(String path) {
+        String collect = null;
+        collect = IOHelper.reeadResourceLines(FaceNetSmallV2Helper.class.getResourceAsStream(path), ",");
+            //collect = Files.lines(Paths.get(ClassLoader.getSystemResource(path).toURI())).collect(Collectors.joining(","));
         return Arrays.stream(collect.split(",")).mapToDouble(Double::parseDouble).toArray();
     }
 
