@@ -102,7 +102,7 @@ public class FaceRecognition {
         for (Map.Entry<String, INDArray> entry : memberEncodingsMap.entrySet()) {
             INDArray value = entry.getValue();
             double distance = distance(value, encodings);
-            //log.info("distance of " + entry.getKey() + " with " + new File(imageread.toString()).getName() + " is " + distance);
+            log.info("distance of " + entry.getKey() + " with " + "scanning is " + distance);
             if (distance < minDistance) {
                 minDistance = distance;
                 foundUser = entry.getKey();
