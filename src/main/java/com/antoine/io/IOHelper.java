@@ -1,7 +1,6 @@
 package com.antoine.io;
 
 import java.io.*;
-import java.net.URL;
 
 public class IOHelper {
 
@@ -33,7 +32,7 @@ public class IOHelper {
             String buff = reader.readLine();
             while (buff != null)
             {
-                data.append(buff+",");
+                data.append(buff + collapse);
                 buff = reader.readLine();
             }
 
