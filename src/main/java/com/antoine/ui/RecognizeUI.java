@@ -6,6 +6,7 @@ import com.antoine.vue.frame.Frame;
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.WebcamResolution;
 import org.bytedeco.javacpp.*;
+import org.bytedeco.javacv.CanvasFrame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.bytedeco.javacv.OpenCVFrameGrabber;
 
@@ -35,16 +36,12 @@ public class RecognizeUI {
     private FaceRecognition faceRecognition;
     private org.bytedeco.javacpp.opencv_face.FaceRecognizer lbphFaceRecognizer;
 
-    private Webcam webcam;
-    private JFrame window;
-    private JLabel label;
-    private PanelScan panel;
     private opencv_objdetect.CascadeClassifier face_cascade;
-    private volatile opencv_core.Mat[] v = new opencv_core.Mat[1];
-    private volatile org.bytedeco.javacv.Frame[] videoFrame = new org.bytedeco.javacv.Frame[1];
+    private opencv_core.Mat mat;
+    private CanvasFrame cFrame;
+    private OpenCVFrameGrabber grabber;
 
     private String absoluteProgrammePath;
-    private final String PHOTOSCANNING_FILE = "scanning.png";
     private final String PROFILS_FILE = "profil";
 
 
@@ -55,10 +52,10 @@ public class RecognizeUI {
             face_cascade = new opencv_objdetect.CascadeClassifier(
                     getClass().getResource("/resources/haarcascade_frontalface_default.xml").getPath()
             );
-            lbphFaceRecognizer = opencv_face.LBPHFaceRecognizer.create();
+           /* lbphFaceRecognizer = opencv_face.LBPHFaceRecognizer.create();
             lbphFaceRecognizer.read(
                     getClass().getResource("/resources/haarcascade_fraontalface_alt.xml").getPath()
-            );
+            );*/
         }catch (Exception e) {
             log.info("erreur de cascade");
 
@@ -67,36 +64,15 @@ public class RecognizeUI {
 
     public void initWindow()
     {
-        label = new JLabel("SCANNING - Placez votre visage dans le guide");
-        label.setBackground(Color.BLACK);
-        label.setHorizontalTextPosition(JLabel.CENTER);
-        label.setForeground(Color.WHITE);
-        JPanel labelContainer = new JPanel();
-        labelContainer.add(label);
-        labelContainer.setBackground(Color.BLACK);
-        window = new JFrame("FACIAL RECOGNIZER");
-        Container container = window.getContentPane();
-        container.setLayout(new BorderLayout());
-        container.add(panel, BorderLayout.CENTER);
-        container.add(labelContainer, BorderLayout.SOUTH);
-        window.setResizable(false);
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        window.pack();
-        window.setVisible(true);
     }
 
 
     public void initWebCam()
     {
         try {
-            webcam = Webcam.getDefault();
-            webcam.setViewSize(WebcamResolution.VGA.getSize());
 
-            panel = new PanelScan(webcam);
-            panel.setFPSDisplayed(true);
-            panel.setDisplayDebugInfo(true);
-            panel.setImageSizeDisplayed(true);
-            //panel.setMirrored(true);
+            grabber = new OpenCVFrameGrabber(0);
+            cFrame = new CanvasFrame("Capture Preview", CanvasFrame.getDefaultGamma() / grabber.getGamma());
 
         }catch (Throwable t)
         {
@@ -164,30 +140,29 @@ public class RecognizeUI {
         new Thread(()->{
             try {
                 boolean isSame = false;
-                File photoScanning = new File(PHOTOSCANNING_FILE);
-                String whoIs = null;
+                String whoIs = "unknown";
 
-                panel.startScanning();
 
-                while (!isSame) {
-                    threadSleep(100);
+                org.bytedeco.javacv.Frame img = null;
+
+                grabber.start();
+
+                cFrame.showImage(grabber.grab());
+
+                while (!isSame && cFrame.isActive()) {
+                    //threadSleep(100);
+
+                    img = grabber.grab();
+
+                    mat = new OpenCVFrameConverter.ToMat().convert(img);
 
                     try {
-                        ImageIO.write(webcam.getImage(), "PNG", photoScanning);
 
-                    } catch (IOException e) {
-                        String error = "Error writing image for scanner";
-                        log.error(error, e);
-                        showErrorDialog(error, true);
-                    }
+                        drawRect(mat);
 
-                    try {
-                        org.bytedeco.javacpp.opencv_core.Mat imread = opencv_imgcodecs.imread(photoScanning.getAbsolutePath());
-
-                        ArrayList<Rectangle> faces = drawRect(imread);
-
-                        panel.setBox(faces);
-                        whoIs = faceRecognition.whoIs(imread);
+                        whoIs = faceRecognition.whoIs(mat);
+                        if (false)
+                            throw new Exception();
                     } catch (IOException e) {
                         String error = "Erreur lors de la reconnaissance";
                         log.error(error, e);
@@ -197,16 +172,18 @@ public class RecognizeUI {
                     isSame = !whoIs.toLowerCase().contains("unknown");
 
                     if (isSame) {
-                        panel.stopScanning();
-                        label.setText("Bonjour " + whoIs);
-                        window.repaint();
-
                         threadSleep(4000);
                     }
                 }
-                window.dispose();
-                webcam.close();
-                photoScanning.delete();
+
+                grabber.stop();
+                if (cFrame.isVisible())
+                    cFrame.dispose();
+
+                if (!isSame) {
+                    cFrame.dispose();
+                    showErrorDialog("Detection interrompue", true);
+                }
 
                 JFrame interFram = new JFrame();
                 ProgressBar analyzing = new ProgressBar(interFram, true);
@@ -239,8 +216,7 @@ public class RecognizeUI {
                 .start();
     }
 
-    private ArrayList<Rectangle> drawRect(opencv_core.Mat imread){
-        opencv_core.Mat videoMat = new opencv_core.Mat();
+    private void drawRect(opencv_core.Mat imread){
             opencv_core.Mat videoMatGray = new opencv_core.Mat();
             //Convert the current frame to grayscale:
             cvtColor(imread, videoMatGray, COLOR_BGRA2GRAY);
@@ -249,17 +225,6 @@ public class RecognizeUI {
             // Find the faces in the frame:*/
             opencv_core.RectVector faces = new opencv_core.RectVector();
             face_cascade.detectMultiScale(videoMatGray, faces);
-            ArrayList<Rectangle> rectangles = new ArrayList<>();
-
-            /*for (int i = 0; i < faces.size(); i++)
-            {
-                opencv_core.Rect face = faces.get(i);
-                recangles.add(
-                        new Rectangle(face.x(), face.width(), face.y(), face.height())
-                );
-            }
-
-            return recangles;*/
 
             // At this point you have the position of the faces in
             // faces. Now we'll get the faces, make a prediction and
@@ -267,7 +232,7 @@ public class RecognizeUI {
             for (int i = 0; i < faces.size(); i++) {
                 opencv_core.Rect face_i = faces.get(i);
 
-                opencv_core.Mat face = new opencv_core.Mat(videoMatGray, face_i);
+                //opencv_core.Mat face = new opencv_core.Mat(videoMatGray, face_i);
                 // If fisher face recognizer is used, the face need to be
                 // resized.
                 //resize(face, face_resized, new opencv_core.Size(im_width, im_height),
@@ -276,12 +241,12 @@ public class RecognizeUI {
                 // Now perform the prediction, see how easy that is:
                 IntPointer label = new IntPointer(1);
                 DoublePointer confidence = new DoublePointer(1);
-                lbphFaceRecognizer.predict(face, label, confidence);
+                //lbphFaceRecognizer.predict(face, label, confidence);
                 int prediction = label.get(0);
 
                 // And finally write all we've found out to the original image!
                 // First of all draw a green rectangle around the detected face:
-                rectangle(videoMat, face_i, new opencv_core.Scalar(0, 255, 0, 1));
+                rectangle(imread, face_i, new opencv_core.Scalar(0, 255, 0, 1));
 
                 // Create the text we will annotate the box with:
                 String box_text = "Prediction = " + prediction;
@@ -291,10 +256,9 @@ public class RecognizeUI {
                 int pos_y = Math.max(face_i.tl().y() - 10, 0);
                 // And now put it into the image:
                 //putText(videoMat, box_text, new Point(pos_x, pos_y),
-                //FONT_HERSHEY_PLAIN, 1.0, new opencv_core.Scalar(0, 255, 0, 2.0));
-                rectangles.add(new Rectangle(face_i.x(), face_i.width(), face_i.y(), face_i.height()));
+                  //      FONT_HERSHEY_PLAIN, 1.0, new opencv_core.Scalar(0, 255, 0, 2.0));
             }
-            return rectangles;
+            cFrame.showImage(new OpenCVFrameConverter.ToMat().convert(imread));
     }
 
     private static void threadSleep(long timeToSleep){

@@ -51,7 +51,7 @@ public class App
                 progressBar.updateLoadingState(loadingState + "webcam");
                 ui.initWebCam();
                 progressBar.updateLoadingState(loadingState + "data");
-                ui.initWindow();
+                //ui.initWindow();
                 progressBar.updateLoadingState("Starting Scan");
                 ui.startRecognizer();
 
