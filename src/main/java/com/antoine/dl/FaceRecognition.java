@@ -4,13 +4,21 @@ import com.antoine.io.IOHelper;
 import org.apache.commons.io.FileUtils;
 import org.bytedeco.javacpp.opencv_core;
 import org.datavec.image.loader.NativeImageLoader;
+import org.deeplearning4j.nn.api.Layer;
+import org.deeplearning4j.nn.api.Model;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.graph.vertex.GraphVertex;
+import org.deeplearning4j.nn.layers.objdetect.DetectedObject;
+import org.deeplearning4j.nn.layers.objdetect.Yolo2OutputLayer;
 import org.deeplearning4j.nn.workspace.LayerWorkspaceMgr;
+import org.deeplearning4j.nn.layers.objdetect.DetectedObject;
 import org.deeplearning4j.util.ModelSerializer;
+import org.deeplearning4j.zoo.model.VGG16;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.indexing.NDArrayIndex;
+import org.opencv.core.Mat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,19 +28,25 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.Adler32;
+import java.util.List;
 
 public class FaceRecognition {
 
     private static Logger log = LoggerFactory.getLogger(com.antoine.dl.FaceRecognition.class);
 
     private static final double THRESHOLD = 0.50;
+
     private FaceNetSmallV2Model faceNetSmallV2Model;
     private ComputationGraph computationGraph;
     private static final NativeImageLoader LOADER = new NativeImageLoader(96, 96, 3);
     private final HashMap<String, INDArray> memberEncodingsMap = new HashMap<>();
+
     private final String SAVE_FILE = "save";
     private final String MODELSAVED_FILE = "modelSaved.zip";
     private final String CHECKSUM_FILE = "lastChecksum.txt";
+
+    private List<DetectedObject> predictedObjects;
+
 
     private INDArray transpose(INDArray indArray1) {
         INDArray one = Nd4j.create(new int[]{1, 96, 96});

@@ -28,7 +28,7 @@ public class WebcamPanelDecorated extends WebcamPanel {
 
             g.setColor(Color.BLACK);
 
-            g.drawOval(this.getWidth() / 4, this.getHeight() / 10, this.getWidth() / 2, this.getHeight() - (this.getHeight() / 6));
+            g.drawOval(this.getWidth() / 4, this.getHeight() / 3, this.getWidth() / 4, this.getHeight() - (this.getHeight() / 8));
 
             g.setColor(old);
         }
