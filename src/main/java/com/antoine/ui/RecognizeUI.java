@@ -3,8 +3,6 @@ package com.antoine.ui;
 import com.antoine.dl.FaceRecognition;
 import com.antoine.photoRegister.Photo;
 import com.antoine.vue.frame.Frame;
-import com.github.sarxos.webcam.Webcam;
-import com.github.sarxos.webcam.WebcamResolution;
 import org.bytedeco.javacpp.*;
 import org.bytedeco.javacv.CanvasFrame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
@@ -15,11 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -32,17 +30,17 @@ public class RecognizeUI {
 
     private static Logger log = LoggerFactory.getLogger(com.antoine.ui.RecognizeUI.class);
 
+    private final String PROFILS_FILE = "profil";
 
     private FaceRecognition faceRecognition;
-    private org.bytedeco.javacpp.opencv_face.FaceRecognizer lbphFaceRecognizer;
 
     private opencv_objdetect.CascadeClassifier face_cascade;
     private opencv_core.Mat mat;
     private CanvasFrame cFrame;
     private OpenCVFrameGrabber grabber;
+    private OpenCVFrameConverter converter;
 
     private String absoluteProgrammePath;
-    private final String PROFILS_FILE = "profil";
 
 
     public RecognizeUI(String absoluteProgrammePath)
@@ -74,6 +72,7 @@ public class RecognizeUI {
             grabber = new OpenCVFrameGrabber(0);
             cFrame = new CanvasFrame("Capture Preview", CanvasFrame.getDefaultGamma() / grabber.getGamma());
 
+            converter = new OpenCVFrameConverter.ToIplImage();
         }catch (Throwable t)
         {
             String error = "webcam non détéctée";
@@ -98,7 +97,7 @@ public class RecognizeUI {
          /*   profil.mkdir();
             throw new RuntimeException("Dossier profil inexistant, création en cours, Veuillez enregistrer un profil avec le PhotoRegister");*/
          showErrorDialog("Pas de profile enregistré, lancement automatique du programme PhotoRegister", false);
-            Lock lock = new ReentrantLock();
+         Lock lock = new ReentrantLock();
          Photo photo = new Photo(absoluteProgrammePath);
          photo.init(lock);
 
@@ -144,6 +143,7 @@ public class RecognizeUI {
 
 
                 org.bytedeco.javacv.Frame img = null;
+                opencv_core.Mat faceDetecting = null;
 
                 grabber.start();
 
@@ -154,13 +154,17 @@ public class RecognizeUI {
 
                     img = grabber.grab();
 
-                    mat = new OpenCVFrameConverter.ToMat().convert(img);
+                    mat = converter.convertToMat(img);
 
                     try {
 
-                        drawRect(mat);
+                        faceDetecting = detectFace(mat);
 
-                        whoIs = faceRecognition.whoIs(mat);
+                        cFrame.showImage(converter.convert(mat));
+
+                        converter.convertToIplImage(img);
+
+                        whoIs = faceRecognition.whoIs(faceDetecting);
                         if (false)
                             throw new Exception();
                     } catch (IOException e) {
@@ -216,49 +220,53 @@ public class RecognizeUI {
                 .start();
     }
 
-    private void drawRect(opencv_core.Mat imread){
-            opencv_core.Mat videoMatGray = new opencv_core.Mat();
-            //Convert the current frame to grayscale:
-            cvtColor(imread, videoMatGray, COLOR_BGRA2GRAY);
-            equalizeHist(videoMatGray, videoMatGray);
+    private opencv_core.Mat detectFace(opencv_core.Mat imread)
+    {
+        opencv_core.Mat videoMatGray = new opencv_core.Mat();
+        opencv_core.Mat face = null;
+        //Convert the current frame to grayscale:
+        cvtColor(imread, videoMatGray, COLOR_BGRA2GRAY);
+        equalizeHist(videoMatGray, videoMatGray);
 
-            // Find the faces in the frame:*/
-            opencv_core.RectVector faces = new opencv_core.RectVector();
-            face_cascade.detectMultiScale(videoMatGray, faces);
+        // Find the faces in the frame:*/
+        opencv_core.RectVector faces = new opencv_core.RectVector();
+        face_cascade.detectMultiScale(videoMatGray, faces);
 
-            // At this point you have the position of the faces in
-            // faces. Now we'll get the faces, make a prediction and
-            // annotate it in the video. Cool or what?
-            for (int i = 0; i < faces.size(); i++) {
-                opencv_core.Rect face_i = faces.get(i);
+        // At this point you have the position of the faces in
+        // faces. Now we'll get the faces, make a prediction and
+        // annotate it in the video. Cool or what?
+        //for (int i = 0; i < faces.size(); i++) {
+        opencv_core.Rect face_i = null;
 
-                //opencv_core.Mat face = new opencv_core.Mat(videoMatGray, face_i);
-                // If fisher face recognizer is used, the face need to be
-                // resized.
-                //resize(face, face_resized, new opencv_core.Size(im_width, im_height),
-                // 1.0, 1.0, INTER_CUBIC);
+        if (!faces.empty())
+        {
+            face_i = faces.get(0);
 
-                // Now perform the prediction, see how easy that is:
-                IntPointer label = new IntPointer(1);
-                DoublePointer confidence = new DoublePointer(1);
-                //lbphFaceRecognizer.predict(face, label, confidence);
-                int prediction = label.get(0);
+            face = new opencv_core.Mat(videoMatGray, face_i);
+            // If fisher face recognizer is used, the face need to be
+            // resized.
+            //resize(face, 100, new opencv_core.Size(200, 200),
+             //1.0, 1.0, INTER_CUBIC);
 
-                // And finally write all we've found out to the original image!
-                // First of all draw a green rectangle around the detected face:
-                rectangle(imread, face_i, new opencv_core.Scalar(0, 255, 0, 1));
+            // Now perform the prediction, see how easy that is:
+            //IntPointer label = new IntPointer(1);
+            //DoublePointer confidence = new DoublePointer(1);
+            //lbphFaceRecognizer.predict(face, label, confidence);
+            //int prediction = label.get(0);
 
-                // Create the text we will annotate the box with:
-                String box_text = "Prediction = " + prediction;
-                // Calculate the position for annotated text (make sure we don't
-                // put illegal values in there):
-                int pos_x = Math.max(face_i.tl().x() - 10, 0);
-                int pos_y = Math.max(face_i.tl().y() - 10, 0);
-                // And now put it into the image:
-                //putText(videoMat, box_text, new Point(pos_x, pos_y),
-                  //      FONT_HERSHEY_PLAIN, 1.0, new opencv_core.Scalar(0, 255, 0, 2.0));
+            // And finally write all we've found out to the original image!
+            // First of all draw a green rectangle around the detected face:
+            rectangle(imread, face_i, new opencv_core.Scalar(0, 255, 0, 1));
+
+            // Calculate the position for annotated text (make sure we don't
+            // put illegal values in there):
+            int pos_x = Math.max(face_i.tl().x() - 10, 0);
+            int pos_y = Math.max(face_i.tl().y() - 10, 0);
+            // And now put it into the image:
+            putText(imread, "Detecting", new opencv_core.Point(pos_x, pos_y),
+              FONT_HERSHEY_PLAIN, 1.0, new opencv_core.Scalar(0, 255, 0, 2.0));
             }
-            cFrame.showImage(new OpenCVFrameConverter.ToMat().convert(imread));
+        return face;
     }
 
     private static void threadSleep(long timeToSleep){
