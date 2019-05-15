@@ -1,6 +1,7 @@
 package com.antoine.photoRegister;
 
 import com.antoine.ui.RecognizeUI;
+import com.antoine.ui.WebcamPane;
 import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacpp.opencv_objdetect;
 import org.bytedeco.javacv.*;
@@ -26,10 +27,12 @@ public class Photo {
 
     private static Logger log = LoggerFactory.getLogger(com.antoine.photoRegister.Photo.class);
 
-    private CanvasFrame canvasFrame;
     private OpenCVFrameGrabber grabber;
     private Mat face;
     private opencv_objdetect.CascadeClassifier face_cascade;
+    private org.bytedeco.javacv.Java2DFrameConverter converterBufferImage;
+    private org.bytedeco.javacv.OpenCVFrameConverter converter;
+    private JFrame frame;
     private JTextField userName;
     private JLabel info;
     private Thread thread;
@@ -48,10 +51,9 @@ public class Photo {
 
         try {
             grabber = new OpenCVFrameGrabber(0);
-            canvasFrame = new CanvasFrame("Detection", CanvasFrame.getDefaultGamma() / grabber.getGamma());
             grabber.start();
         userName = new JTextField();
-        JFrame frame = new JFrame("PhotoRegister");
+        frame = new JFrame("PhotoRegister");
 
 
         JButton enregistrer = new JButton("enregistrer");
@@ -80,8 +82,6 @@ public class Photo {
         container.add(panelBas, BorderLayout.SOUTH);
         frame.setResizable(false);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
-        frame.setVisible(true);
         initThread();
  }catch (Throwable t)
         {
@@ -96,23 +96,30 @@ public class Photo {
                     try {
 
                        frame = grabber.grab();
-                       canvasFrame.showImage(frame);
+
+
                     } catch (Throwable t) {
                         RecognizeUI.showErrorDialog(t.toString(), true);
                     }
 
-                    canvasFrame.pack();
-                    canvasFrame.setVisible(true);
-                    org.bytedeco.javacv.OpenCVFrameConverter converter = new org.bytedeco.javacv.OpenCVFrameConverter.ToIplImage();
-                    while (canvasFrame.isVisible())
+                    converter = new org.bytedeco.javacv.OpenCVFrameConverter.ToIplImage();
+                    converterBufferImage = new org.bytedeco.javacv.Java2DFrameConverter();
+                    opencv_core.IplImage img = converter.convertToIplImage(frame);
+                    BufferedImage image = converterBufferImage.convert(frame);
+                    WebcamPane webcamPane = new WebcamPane();
+                    webcamPane.updateImage(image);
+                    this.frame.add(webcamPane, BorderLayout.CENTER);
+                    this.frame.pack();
+                    this.frame.setVisible(true);
+                    while (this.frame.isVisible())
                     {
                         try {
                             frame = grabber.grab();
-                            Mat img = converter.convertToMat(frame);
+                            Mat newImage = converter.convertToMat(frame);
 
-                            face = detectFace(img);
+                            face = detectFace(newImage);
 
-                            canvasFrame.showImage(converter.convert(img));
+                            webcamPane.updateImage(converterBufferImage.convert(converter.convert(newImage)));
 
                         } catch (FrameGrabber.Exception e) {
                             RecognizeUI.showErrorDialog(e.toString(), true);
@@ -136,7 +143,9 @@ public class Photo {
                     profilFile.mkdir();
                 }
 
-                org.bytedeco.javacpp.opencv_imgcodecs.imwrite(Paths.get(absoluteProgrammePath, userName+"png").toFile().getAbsolutePath(), buff);
+                Frame buff2 = converter.convert(buff);
+
+                ImageIO.write(converterBufferImage.convert(buff2), "PNG", new File(profilFile, userName.getText() + ".png"));
 
             } catch (Throwable e) {
                 log.info("erreur lors de la créationd de la photo", e);
@@ -145,20 +154,20 @@ public class Photo {
 
             info.setText("Photo enregistré");
 
-            canvasFrame.repaint();
+            frame.repaint();
 
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException ignored) { }
             grabber.close();
-            canvasFrame.dispose();
+            frame.dispose();
             synchronized (lock){
                 lock.notify();
             }
         }else {
 
             info.setText("Vous devez rentrez un nom");
-            canvasFrame.repaint();
+            frame.repaint();
         }
     }
 
