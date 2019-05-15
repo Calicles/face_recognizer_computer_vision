@@ -1,12 +1,8 @@
 package com.antoine.photoRegister;
 
-import com.antoine.ui.RecognizeUI;
-import com.antoine.ui.WebcamPane;
-import org.bytedeco.javacpp.opencv_core;
-import org.bytedeco.javacpp.opencv_objdetect;
+import com.antoine.ui.ImagePane;
+import com.antoine.ui.Webcam;
 import org.bytedeco.javacv.*;
-import org.bytedeco.javacpp.opencv_core.Mat;
-import org.bytedeco.javacv.Frame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,27 +12,19 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.concurrent.locks.Lock;
-
-import static org.bytedeco.javacpp.opencv_core.FONT_HERSHEY_PLAIN;
-import static org.bytedeco.javacpp.opencv_imgproc.COLOR_BGRA2GRAY;
-import static org.bytedeco.javacpp.opencv_imgproc.*;
 
 public class Photo {
 
     private static Logger log = LoggerFactory.getLogger(com.antoine.photoRegister.Photo.class);
 
-    private OpenCVFrameGrabber grabber;
-    private Mat face;
-    private opencv_objdetect.CascadeClassifier face_cascade;
-    private org.bytedeco.javacv.Java2DFrameConverter converterBufferImage;
-    private org.bytedeco.javacv.OpenCVFrameConverter converter;
-    private JFrame frame;
     private JTextField userName;
     private JLabel info;
-    private Thread thread;
-
+    private ImagePane photoPane;
+    private JPanel containerPane;
+    private Webcam webcam;
+    private BufferedImage photo;
+    JButton enregistrer;
     private String absoluteProgrammePath;
 
     public Photo(String absoluteProgrammePath)
@@ -44,32 +32,20 @@ public class Photo {
         this.absoluteProgrammePath = absoluteProgrammePath;
     }
 
-    public void init(Lock lock) {
-        face_cascade = new opencv_objdetect.CascadeClassifier(
-                getClass().getResource("/resources/haarcascade_frontalface_default.xml").getPath()
-        );
-
-        try {
-            grabber = new OpenCVFrameGrabber(0);
-            grabber.start();
-        userName = new JTextField();
-        frame = new JFrame("PhotoRegister");
-
-
-        JButton enregistrer = new JButton("enregistrer");
-        enregistrer.addActionListener((event)-> {
-            try {
-                registerPhoto(lock);
-            } catch (FrameGrabber.Exception e) {
-                throw new RuntimeException(e);
-            }
-        });
+    public void init(Lock lock) throws FrameGrabber.Exception {
+        enregistrer = new JButton("photographier")
+                ;
+        enregistrer.addActionListener((event)-> registerPhoto());
 
         info = new JLabel("Entrez votre nom et placez votre visage dans le guide");
         info.setBackground(Color.BLACK);
         info.setForeground(Color.WHITE);
 
+        constructPhotoPane(lock);
+
         JPanel panelBas = new JPanel();
+        userName = new JTextField();
+        userName.addActionListener((e -> registerPhoto()));
 
         panelBas.setLayout(new BorderLayout());
         panelBas.add(userName, BorderLayout.NORTH);
@@ -77,147 +53,89 @@ public class Photo {
         panelBas.add(info, BorderLayout.SOUTH);
         panelBas.setBackground(Color.BLACK);
 
-        Container container = frame.getContentPane();
-        container.setLayout(new BorderLayout());
-        container.add(panelBas, BorderLayout.SOUTH);
-        frame.setResizable(false);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        initThread();
- }catch (Throwable t)
-        {
-            RecognizeUI.showErrorDialog(t.toString(), true);
-        }
+        webcam = Webcam.builer()
+                .init("PhotoRegister")
+                .setLayout(new BorderLayout())
+                .initGrabber()
+                .setDefaultClassifier()
+                .setOnlyOneFaceCareTaker(true)
+                .addComponent(panelBas, BorderLayout.SOUTH)
+                .addComponent(containerPane, BorderLayout.EAST)
+                .setFaceDetectorThread()
+                .build();
+
+        containerPane.setVisible(false);
+        webcam.start();
     }
 
-    private void initThread() {
-        thread = new Thread(
-                ()->{
-                    Frame frame = null;
-                    try {
 
-                       frame = grabber.grab();
-
-
-                    } catch (Throwable t) {
-                        RecognizeUI.showErrorDialog(t.toString(), true);
-                    }
-
-                    converter = new org.bytedeco.javacv.OpenCVFrameConverter.ToIplImage();
-                    converterBufferImage = new org.bytedeco.javacv.Java2DFrameConverter();
-                    opencv_core.IplImage img = converter.convertToIplImage(frame);
-                    BufferedImage image = converterBufferImage.convert(frame);
-                    WebcamPane webcamPane = new WebcamPane();
-                    webcamPane.updateImage(image);
-                    this.frame.add(webcamPane, BorderLayout.CENTER);
-                    this.frame.pack();
-                    this.frame.setVisible(true);
-                    while (this.frame.isVisible())
-                    {
-                        try {
-                            frame = grabber.grab();
-                            Mat newImage = converter.convertToMat(frame);
-
-                            face = detectFace(newImage);
-
-                            webcamPane.updateImage(converterBufferImage.convert(converter.convert(newImage)));
-
-                        } catch (FrameGrabber.Exception e) {
-                            RecognizeUI.showErrorDialog(e.toString(), true);
-                        }
-                    }
-                }
-        );
-        thread.start();
-    }
-
-    private void registerPhoto(Lock lock) throws FrameGrabber.Exception {
-        if (!userName.getText().isEmpty() && face != null)
+    private void registerPhoto() {
+        photo = webcam.getImage();
+        if (!userName.getText().isEmpty() &&  photo != null)
         {
-            Mat buff = face.clone();
             try {
+                enregistrer.setEnabled(false);
 
-                File profilFile = new File(absoluteProgrammePath,"profil");
+                photoPane.updateImage(photo);
 
-                if (!profilFile.exists()) {
-                    log.info("création du dossier 'profil'");
-                    profilFile.mkdir();
-                }
-
-                Frame buff2 = converter.convert(buff);
-
-                ImageIO.write(converterBufferImage.convert(buff2), "PNG", new File(profilFile, userName.getText() + ".png"));
+                containerPane.setVisible(true);
 
             } catch (Throwable e) {
                 log.info("erreur lors de la créationd de la photo", e);
                 info.setText("Erreur");
             }
-
-            info.setText("Photo enregistré");
-
-            frame.repaint();
-
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException ignored) { }
-            grabber.close();
-            frame.dispose();
-            synchronized (lock){
-                lock.notify();
-            }
         }else {
-
-            info.setText("Vous devez rentrez un nom");
-            frame.repaint();
+            if (photo == null)
+                info.setText("Visage non détécté");
+            else
+                info.setText("Vous devez rentrez un nom");
+            webcam.repaint();
         }
     }
 
-    private Mat detectFace(Mat imread)
-    {
-        Mat videoMatGray = new Mat();
-        Mat face = null;
-        //Convert the current frame to grayscale:
-        cvtColor(imread, videoMatGray, COLOR_BGRA2GRAY);
-        equalizeHist(videoMatGray, videoMatGray);
+    private void constructPhotoPane(Lock lock) {
+        photoPane = new ImagePane(Color.BLACK);
+        containerPane = new JPanel(new BorderLayout());
+        JLabel info = new JLabel("Valider la photo ?");
+        info.setForeground(Color.WHITE);
+        JPanel panelBas = new JPanel(new BorderLayout());
+        panelBas.setBackground(Color.BLACK);
+        JPanel paneButton = new JPanel();
+        paneButton.setBackground(Color.BLACK);
 
-        // Find the faces in the frame:*/
-        opencv_core.RectVector faces = new opencv_core.RectVector();
-        face_cascade.detectMultiScale(videoMatGray, faces);
+        photoPane.updateImage(photo);
+        containerPane = new JPanel(new BorderLayout());
+        containerPane.setBackground(Color.BLACK);
+        containerPane.add(photoPane, BorderLayout.CENTER);
+        JButton okButton = new JButton("ok");
+        okButton.addActionListener((event)-> {
+            try{
+            File profilFile = new File(absoluteProgrammePath, "profil");
 
-        // At this point you have the position of the faces in
-        // faces. Now we'll get the faces, make a prediction and
-        // annotate it in the video. Cool or what?
-        //for (int i = 0; i < faces.size(); i++) {
-        opencv_core.Rect face_i = null;
+            if (!profilFile.exists()) {
+                log.info("création du dossier 'profil'");
+                profilFile.mkdir();
+            }
 
-        if (!faces.empty())
-        {
-            face_i = faces.get(0);
-
-            face = new opencv_core.Mat(videoMatGray, face_i);
-            // If fisher face recognizer is used, the face need to be
-            // resized.
-            //resize(face, 100, new opencv_core.Size(200, 200),
-            //1.0, 1.0, INTER_CUBIC);
-
-            // Now perform the prediction, see how easy that is:
-            //IntPointer label = new IntPointer(1);
-            //DoublePointer confidence = new DoublePointer(1);
-            //lbphFaceRecognizer.predict(face, label, confidence);
-            //int prediction = label.get(0);
-
-            // And finally write all we've found out to the original image!
-            // First of all draw a green rectangle around the detected face:
-            rectangle(imread, face_i, new opencv_core.Scalar(0, 255, 0, 1));
-
-            // Calculate the position for annotated text (make sure we don't
-            // put illegal values in there):
-            int pos_x = Math.max(face_i.tl().x() - 10, 0);
-            int pos_y = Math.max(face_i.tl().y() - 10, 0);
-            // And now put it into the image:
-            putText(imread, "Detecting", new opencv_core.Point(pos_x, pos_y),
-                    FONT_HERSHEY_PLAIN, 1.0, new opencv_core.Scalar(0, 255, 0, 2.0));
-        }
-        return face;
+                ImageIO.write(photo, "PNG", new File(profilFile, userName.getText() + ".png"));
+                webcam.close();
+                webcam.dispose();
+                synchronized (lock){
+                    lock.notify();
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        JButton cancelButton = new JButton("annuler");
+        cancelButton.addActionListener((event)->{
+            containerPane.setVisible(false);
+            enregistrer.setEnabled(true);
+        });
+        paneButton.add(okButton);
+        paneButton.add(cancelButton);
+        panelBas.add(info, BorderLayout.CENTER);
+        panelBas.add(paneButton, BorderLayout.SOUTH);
+        containerPane.add(panelBas, BorderLayout.SOUTH);
     }
-
 }

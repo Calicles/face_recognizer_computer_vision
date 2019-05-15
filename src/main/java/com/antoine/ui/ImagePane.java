@@ -4,9 +4,14 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class WebcamPane extends JPanel {
+public class ImagePane extends JPanel {
 
     private BufferedImage img;
+
+    public ImagePane(Color backgroundCOlor){
+        super();
+        super.setBackground(backgroundCOlor);
+    }
 
     @Override
     public void paintComponent(Graphics g){

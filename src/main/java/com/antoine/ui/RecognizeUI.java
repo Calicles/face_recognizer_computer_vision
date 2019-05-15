@@ -164,7 +164,8 @@ public class RecognizeUI {
 
                         converter.convertToIplImage(img);
 
-                        whoIs = faceRecognition.whoIs(faceDetecting);
+                        if (faceDetecting != null)
+                            whoIs = faceRecognition.whoIs(faceDetecting);
                         if (false)
                             throw new Exception();
                     } catch (IOException e) {
