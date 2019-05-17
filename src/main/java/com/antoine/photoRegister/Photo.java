@@ -12,6 +12,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.concurrent.locks.Lock;
 
 public class Photo {
@@ -24,7 +25,7 @@ public class Photo {
     private JPanel containerPane;
     private Webcam webcam;
     private BufferedImage photo;
-    JButton enregistrer;
+    private JButton enregistrer;
     private String absoluteProgrammePath;
 
     public Photo(String absoluteProgrammePath)
@@ -37,7 +38,7 @@ public class Photo {
                 ;
         enregistrer.addActionListener((event)-> registerPhoto());
 
-        info = new JLabel("Entrez votre nom et placez votre visage dans le guide");
+        info = new JLabel("Entrez votre nom et enregistrez une photo");
         info.setBackground(Color.BLACK);
         info.setForeground(Color.WHITE);
 
@@ -53,8 +54,9 @@ public class Photo {
         panelBas.add(info, BorderLayout.SOUTH);
         panelBas.setBackground(Color.BLACK);
 
-        webcam = Webcam.builer()
+        webcam = Webcam.builder()
                 .init("PhotoRegister")
+                .setResourcesDirectoryPath(Paths.get(absoluteProgrammePath, "resources").toFile().getAbsolutePath())
                 .setLayout(new BorderLayout())
                 .initGrabber()
                 .setDefaultClassifier()
@@ -81,7 +83,7 @@ public class Photo {
                 containerPane.setVisible(true);
 
             } catch (Throwable e) {
-                log.info("erreur lors de la créationd de la photo", e);
+                log.info("erreur lors de la création de la photo", e);
                 info.setText("Erreur");
             }
         }else {

@@ -4,27 +4,20 @@ import com.antoine.dl.FaceRecognition;
 import com.antoine.photoRegister.Photo;
 import com.antoine.vue.frame.Frame;
 import org.bytedeco.javacpp.*;
-import org.bytedeco.javacv.CanvasFrame;
-import org.bytedeco.javacv.OpenCVFrameConverter;
-import org.bytedeco.javacv.OpenCVFrameGrabber;
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static org.bytedeco.javacpp.opencv_core.FONT_HERSHEY_PLAIN;
-import static org.bytedeco.javacpp.opencv_imgproc.*;
-
+import java.util.stream.Collectors;
 
 public class RecognizeUI {
 
@@ -34,11 +27,8 @@ public class RecognizeUI {
 
     private FaceRecognition faceRecognition;
 
-    private opencv_objdetect.CascadeClassifier face_cascade;
-    private opencv_core.Mat mat;
-    private CanvasFrame cFrame;
-    private OpenCVFrameGrabber grabber;
-    private OpenCVFrameConverter converter;
+    private Webcam webcam;
+    private JLabel info;
 
     private String absoluteProgrammePath;
 
@@ -46,65 +36,53 @@ public class RecognizeUI {
     public RecognizeUI(String absoluteProgrammePath)
     {
         this.absoluteProgrammePath = absoluteProgrammePath;
-        try {
-            face_cascade = new opencv_objdetect.CascadeClassifier(
-                    getClass().getResource("/resources/haarcascade_frontalface_default.xml").getPath()
-            );
-           /* lbphFaceRecognizer = opencv_face.LBPHFaceRecognizer.create();
-            lbphFaceRecognizer.read(
-                    getClass().getResource("/resources/haarcascade_fraontalface_alt.xml").getPath()
-            );*/
-        }catch (Exception e) {
-            log.info("erreur de cascade");
-
-        }
     }
 
-    public void initWindow()
-    {
-    }
+    public void initWebCam() throws Exception {
+        info = new JLabel("SCANNING");
+        info.setForeground(Color.WHITE);
+        info.setBackground(Color.BLACK);
+        info.setHorizontalTextPosition(JLabel.CENTER);
+        JPanel buff = new JPanel();
+        buff.add(info);
+        buff.setBackground(Color.BLACK);
 
-
-    public void initWebCam()
-    {
-        try {
-
-            grabber = new OpenCVFrameGrabber(0);
-            cFrame = new CanvasFrame("Capture Preview", CanvasFrame.getDefaultGamma() / grabber.getGamma());
-
-            converter = new OpenCVFrameConverter.ToIplImage();
-        }catch (Throwable t)
-        {
-            String error = "webcam non détéctée";
-            log.debug(error, t);
-            throw new RuntimeException(error);
-        }
+        webcam = Webcam.builder()
+                .init("Face Recognizer")
+                .setResourcesDirectoryPath(Paths.get(absoluteProgrammePath, "resources").toFile().getAbsolutePath())
+                .setLayout(new BorderLayout())
+                .initGrabber()
+                .setDefaultClassifier()
+                .setOnlyOneFaceCareTaker(false)
+                .setFaceRecognizer(faceRecognition)
+                .addComponent(buff, BorderLayout.SOUTH)
+                .packAndShow()
+                .build();
     }
 
 
     public void loadModel() throws Exception {
         faceRecognition = new FaceRecognition();
         faceRecognition.loadModel(absoluteProgrammePath);
-        //TinyYoloPrediction.setPROGRAMME_PATH(absoluteProgrammePath);
     }
 
-    public void loadProfils() throws IOException, InterruptedException {
+    public void loadProfils(ProgressBar progressBar) throws IOException, InterruptedException {
 
         File profil = new File(absoluteProgrammePath, PROFILS_FILE);
 
         if (!profil.exists() || profil.list().length == 0)
         {
-         /*   profil.mkdir();
-            throw new RuntimeException("Dossier profil inexistant, création en cours, Veuillez enregistrer un profil avec le PhotoRegister");*/
-         showErrorDialog("Pas de profile enregistré, lancement automatique du programme PhotoRegister", false);
-         Lock lock = new ReentrantLock();
-         Photo photo = new Photo(absoluteProgrammePath);
-         photo.init(lock);
+            progressBar.setVisible(false);
+            showErrorDialog("Pas de profile enregistré, lancement automatique du programme PhotoRegister", false);
+            Lock lock = new ReentrantLock();
+            Photo photo = new Photo(absoluteProgrammePath);
+            photo.init(lock);
 
-         synchronized (lock){
-             lock.wait();
-         }
+            synchronized (lock){
+                 lock.wait();
+            }
 
+            progressBar.setVisible(true);
             log.info("reprise du programme");
         }
 
@@ -138,60 +116,31 @@ public class RecognizeUI {
     {
         new Thread(()->{
             try {
-                boolean isSame = false;
-                String whoIs = "unknown";
 
 
-                org.bytedeco.javacv.Frame img = null;
-                opencv_core.Mat faceDetecting = null;
+                while (webcam.isRecognizingFace())
+                {
+                    webcam.grab();
 
-                grabber.start();
+                    webcam.detectFace();
 
-                cFrame.showImage(grabber.grab());
-
-                while (!isSame && cFrame.isActive()) {
-                    //threadSleep(100);
-
-                    img = grabber.grab();
-
-                    mat = converter.convertToMat(img);
-
-                    try {
-
-                        faceDetecting = detectFace(mat);
-
-                        cFrame.showImage(converter.convert(mat));
-
-                        converter.convertToIplImage(img);
-
-                        if (faceDetecting != null)
-                            whoIs = faceRecognition.whoIs(faceDetecting);
-                        if (false)
-                            throw new Exception();
-                    } catch (IOException e) {
-                        String error = "Erreur lors de la reconnaissance";
-                        log.error(error, e);
-                        showErrorDialog(error, true);
-                    }
-
-                    isSame = !whoIs.toLowerCase().contains("unknown");
-
-                    if (isSame) {
-                        threadSleep(4000);
-                    }
+                    webcam.showImage();
                 }
 
-                grabber.stop();
-                if (cFrame.isVisible())
-                    cFrame.dispose();
+                String[] userNames = webcam.getRecognizedNames();
+                String res = Arrays.stream(userNames).filter((s -> !s.toLowerCase().contains("unknown")))
+                        .collect(Collectors.joining(" et "));
 
-                if (!isSame) {
-                    cFrame.dispose();
-                    showErrorDialog("Detection interrompue", true);
-                }
+                info.setText("Bonjour " + res);
+                webcam.showImage();
+
+                threadSleep(3000);
+
+                webcam.close();
+                webcam.dispose();
 
                 JFrame interFram = new JFrame();
-                ProgressBar analyzing = new ProgressBar(interFram, true);
+                ProgressBar analyzing = new ProgressBar(interFram, true, true);
                 analyzing.showProgressBar("DEVEROUILLAGE", Color.GREEN);
 
                 Executors.newCachedThreadPool().submit(() -> {
@@ -219,55 +168,6 @@ public class RecognizeUI {
 
         })
                 .start();
-    }
-
-    private opencv_core.Mat detectFace(opencv_core.Mat imread)
-    {
-        opencv_core.Mat videoMatGray = new opencv_core.Mat();
-        opencv_core.Mat face = null;
-        //Convert the current frame to grayscale:
-        cvtColor(imread, videoMatGray, COLOR_BGRA2GRAY);
-        equalizeHist(videoMatGray, videoMatGray);
-
-        // Find the faces in the frame:*/
-        opencv_core.RectVector faces = new opencv_core.RectVector();
-        face_cascade.detectMultiScale(videoMatGray, faces);
-
-        // At this point you have the position of the faces in
-        // faces. Now we'll get the faces, make a prediction and
-        // annotate it in the video. Cool or what?
-        //for (int i = 0; i < faces.size(); i++) {
-        opencv_core.Rect face_i = null;
-
-        if (!faces.empty())
-        {
-            face_i = faces.get(0);
-
-            face = new opencv_core.Mat(videoMatGray, face_i);
-            // If fisher face recognizer is used, the face need to be
-            // resized.
-            //resize(face, 100, new opencv_core.Size(200, 200),
-             //1.0, 1.0, INTER_CUBIC);
-
-            // Now perform the prediction, see how easy that is:
-            //IntPointer label = new IntPointer(1);
-            //DoublePointer confidence = new DoublePointer(1);
-            //lbphFaceRecognizer.predict(face, label, confidence);
-            //int prediction = label.get(0);
-
-            // And finally write all we've found out to the original image!
-            // First of all draw a green rectangle around the detected face:
-            rectangle(imread, face_i, new opencv_core.Scalar(0, 255, 0, 1));
-
-            // Calculate the position for annotated text (make sure we don't
-            // put illegal values in there):
-            int pos_x = Math.max(face_i.tl().x() - 10, 0);
-            int pos_y = Math.max(face_i.tl().y() - 10, 0);
-            // And now put it into the image:
-            putText(imread, "Detecting", new opencv_core.Point(pos_x, pos_y),
-              FONT_HERSHEY_PLAIN, 1.0, new opencv_core.Scalar(0, 255, 0, 2.0));
-            }
-        return face;
     }
 
     private static void threadSleep(long timeToSleep){

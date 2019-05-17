@@ -1,5 +1,6 @@
 package com.antoine.dl;
 
+import com.antoine.contracts.IFaceRecognizer;
 import com.antoine.io.IOHelper;
 import org.apache.commons.io.FileUtils;
 import org.bytedeco.javacpp.opencv_core;
@@ -18,7 +19,6 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.indexing.NDArrayIndex;
-import org.opencv.core.Mat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,11 +30,11 @@ import java.util.Map;
 import java.util.zip.Adler32;
 import java.util.List;
 
-public class FaceRecognition {
+public class FaceRecognition implements IFaceRecognizer {
 
     private static Logger log = LoggerFactory.getLogger(com.antoine.dl.FaceRecognition.class);
 
-    private static final double THRESHOLD = 0.50;
+    private static final double THRESHOLD = 0.22;
 
     private FaceNetSmallV2Model faceNetSmallV2Model;
     private ComputationGraph computationGraph;
@@ -108,24 +108,31 @@ public class FaceRecognition {
         return read.div(255.0);
     }
 
-    public String whoIs(opencv_core.Mat imageread) throws IOException {
-        INDArray read = read(imageread);
-        INDArray encodings = forwardPass(normalize(read));
-        double minDistance = Double.MAX_VALUE;
-        String foundUser = "";
-        for (Map.Entry<String, INDArray> entry : memberEncodingsMap.entrySet()) {
-            INDArray value = entry.getValue();
-            double distance = distance(value, encodings);
-            log.info("distance of " + entry.getKey() + " with " + "scanning is " + distance);
-            if (distance < minDistance) {
-                minDistance = distance;
-                foundUser = entry.getKey();
+    @Override
+    public String whoIs(opencv_core.Mat imageread) {
+        String foundUser;
+        try
+        {
+            INDArray read = read(imageread);
+            INDArray encodings = forwardPass(normalize(read));
+            double minDistance = Double.MAX_VALUE;
+            foundUser = "";
+            for (Map.Entry<String, INDArray> entry : memberEncodingsMap.entrySet()) {
+                INDArray value = entry.getValue();
+                double distance = distance(value, encodings);
+                log.info("distance of " + entry.getKey() + " with " + "scanning is " + distance);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    foundUser = entry.getKey();
+                }
             }
+            if (minDistance > THRESHOLD) {
+                foundUser = "Unknown user";
+            }
+            log.info(foundUser + " with distance " + minDistance);
+        } catch (IOException ioe){
+            throw new RuntimeException(ioe);
         }
-        if (minDistance > THRESHOLD) {
-            foundUser = "Unknown user";
-        }
-        log.info(foundUser + " with distance " + minDistance);
         return foundUser;
     }
 

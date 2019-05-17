@@ -1,18 +1,29 @@
 package com.antoine.ui;
 
 import com.antoine.contracts.IFaceRecognizer;
+import org.apache.commons.io.FileUtils;
 import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacpp.opencv_objdetect;
 import org.bytedeco.javacv.FrameGrabber;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
+import java.util.zip.Adler32;
 
-import static org.bytedeco.javacpp.opencv_core.FONT_HERSHEY_PLAIN;
+import static org.bytedeco.javacpp.opencv_core.*;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
 
 public class Webcam {
+
+    private Logger log = LoggerFactory.getLogger(getClass());
 
     private JFrame frame;
     private ImagePane webcamPane;
@@ -25,13 +36,19 @@ public class Webcam {
     private IFaceRecognizer faceRecognizer;
     private Thread thread;
 
-    private boolean onlyOneFaceCareTaker;
+    private String[] recognizedNames;
+
+    private boolean onlyOneFaceCareTaker, faceRecognized;
 
 
     public org.bytedeco.javacpp.opencv_core.Mat getFace(){
 
         return face;
 
+    }
+
+    public String[] getRecognizedNames(){
+        return recognizedNames.clone();
     }
 
     public void grab() throws FrameGrabber.Exception {
@@ -42,11 +59,12 @@ public class Webcam {
         webcamPane.updateImage(java2DFrameConverter.convert(image));
     }
 
-    private void detectFace()
+    public void detectFace()
     {
         opencv_core.Mat videoMatGray = new opencv_core.Mat();
 
         opencv_core.Mat imageToMat = converter.convertToMat(image);
+
         //Convert the current frame to grayscale:
         cvtColor(imageToMat, videoMatGray, COLOR_BGRA2GRAY);
         equalizeHist(videoMatGray, videoMatGray);
@@ -54,6 +72,9 @@ public class Webcam {
         opencv_core.RectVector faces = new opencv_core.RectVector();
         classifier.detectMultiScale(videoMatGray, faces);
         opencv_core.Rect face_i = null;
+
+        recognizedNames = new String[(int) faces.size()];
+
 
         if (!faces.empty())
         {
@@ -77,7 +98,7 @@ public class Webcam {
 
                 String name;
                 if (faceRecognizer != null)
-                    name = faceRecognizer.whoIs(face);
+                    recognizedNames[i] = name = faceRecognizer.whoIs(face);
                 else
                     name = "unknown";
 
@@ -85,16 +106,19 @@ public class Webcam {
                 int pos_y = Math.max(face_i.tl().y() - 10, 0);
 
                 if (name.toLowerCase().contains("unknown")) {
-                    rectangle(imageToMat, face_i, new opencv_core.Scalar(0, 255, 0, 1));
+                    rectangle(imageToMat, face_i, new opencv_core.Scalar(200, 0, 255, 1), 2, 0, 0);
 
                     putText(imageToMat, "Detecting", new opencv_core.Point(pos_x, pos_y),
-                            FONT_HERSHEY_PLAIN, 1.0, new opencv_core.Scalar(0, 255, 0, 2.0));
+                            FONT_HERSHEY_COMPLEX, 0.6, new opencv_core.Scalar(200, 0, 255, 1));
                 }else{
 
-                    rectangle(imageToMat, face_i, new opencv_core.Scalar(255, 0, 0, 1));
+                    if (faceRecognized)
+                        faceRecognized = false;
 
-                    putText(imageToMat, name, new opencv_core.Point(pos_x, pos_y),
-                            FONT_HERSHEY_PLAIN, 1.0, new opencv_core.Scalar(255, 0, 0, 1));
+                    rectangle(imageToMat, face_i, new opencv_core.Scalar(0, 255, 0, 1));
+
+                    putText(imageToMat, "OK", new opencv_core.Point(pos_x, pos_y),
+                            FONT_HERSHEY_COMPLEX, 0.6, new opencv_core.Scalar(0, 255, 0, 2.0));
                 }
             }
         }
@@ -134,23 +158,34 @@ public class Webcam {
         frame.repaint();
     }
 
-    public static WebcamBuilder builer(){
+    public static WebcamBuilder builder(){
         return new WebcamBuilder();
+    }
+
+    public boolean isRecognizingFace() {
+        return faceRecognized;
     }
 
     public static class WebcamBuilder {
 
         private Webcam webcam;
+        private String resourcesDirectoryPath;
 
 
         public WebcamBuilder init(String frameName) {
             webcam = new Webcam();
+            webcam.faceRecognized = true;
             webcam.frame = new JFrame(frameName);
             webcam.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             webcam.webcamPane = new ImagePane(Color.BLACK);
             webcam.grabber = new org.bytedeco.javacv.OpenCVFrameGrabber(0);
             webcam.converter = new org.bytedeco.javacv.OpenCVFrameConverter.ToIplImage();
             webcam.java2DFrameConverter = new org.bytedeco.javacv.Java2DFrameConverter();
+            return this;
+        }
+
+        public WebcamBuilder setResourcesDirectoryPath(String resourcesDirectoryPath){
+            this.resourcesDirectoryPath = resourcesDirectoryPath;
             return this;
         }
 
@@ -165,9 +200,17 @@ public class Webcam {
         }
 
         public WebcamBuilder setDefaultClassifier() {
-            webcam.classifier = new opencv_objdetect.CascadeClassifier(
-                    getClass().getResource("/resources/haarcascade_frontalface_default.xml").getPath()
-            );
+            try {
+                File cascadeValues = Paths.get(resourcesDirectoryPath, "haarcascade_frontalface_default.xml").toFile();
+                if (FileUtils.checksum(cascadeValues, new Adler32()).getValue() != 1694615656)
+                    throw new RuntimeException("la ressource /resources/haarcascade... est corrompue, veuillez la télécharger");
+
+                webcam.classifier = new opencv_objdetect.CascadeClassifier(
+                       cascadeValues.getAbsolutePath()
+                );
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             return this;
         }
 
@@ -181,6 +224,13 @@ public class Webcam {
 
         public WebcamBuilder setFaceRecognizer(IFaceRecognizer faceRecognizer){
             webcam.faceRecognizer = faceRecognizer;
+            return this;
+        }
+
+        public WebcamBuilder packAndShow(){
+            webcam.frame.pack();
+            webcam.frame.setVisible(true);
+
             return this;
         }
 

@@ -37,8 +37,9 @@ public class App
         String absoluteProgrammPath = pathToJar.getParentFile().getAbsolutePath();
 
         JFrame mainFraim = new JFrame();
-        ProgressBar progressBar = new ProgressBar(mainFraim, true);
+        ProgressBar progressBar = new ProgressBar(mainFraim, true, false);
         progressBar.showProgressBar(loadingState + "component", null);
+        progressBar.setValues(0, 4);
         RecognizeUI ui = new RecognizeUI(absoluteProgrammPath);
 
         Executors.newCachedThreadPool().submit(() -> {
@@ -47,11 +48,9 @@ public class App
                 progressBar.updateLoadingState(loadingState + "model");
                 ui.loadModel();
                 progressBar.updateLoadingState(loadingState + "profils");
-                ui.loadProfils();
+                ui.loadProfils(progressBar);
                 progressBar.updateLoadingState(loadingState + "webcam");
                 ui.initWebCam();
-                progressBar.updateLoadingState(loadingState + "data");
-                //ui.initWindow();
                 progressBar.updateLoadingState("Starting Scan");
                 ui.startRecognizer();
 
