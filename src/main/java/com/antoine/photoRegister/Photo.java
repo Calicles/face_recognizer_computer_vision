@@ -120,8 +120,9 @@ public class Photo {
             }
 
                 ImageIO.write(photo, "PNG", new File(profilFile, userName.getText() + ".png"));
-                webcam.close();
+            
                 webcam.dispose();
+                webcam.close();
                 synchronized (lock){
                     lock.notify();
                 }
