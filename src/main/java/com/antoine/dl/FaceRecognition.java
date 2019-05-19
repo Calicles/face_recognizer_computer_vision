@@ -5,18 +5,11 @@ import com.antoine.io.IOHelper;
 import org.apache.commons.io.FileUtils;
 import org.bytedeco.javacpp.opencv_core;
 import org.datavec.image.loader.NativeImageLoader;
-import org.deeplearning4j.nn.api.Layer;
-import org.deeplearning4j.nn.api.Model;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.graph.vertex.GraphVertex;
-import org.deeplearning4j.nn.layers.objdetect.DetectedObject;
-import org.deeplearning4j.nn.layers.objdetect.Yolo2OutputLayer;
 import org.deeplearning4j.nn.workspace.LayerWorkspaceMgr;
-import org.deeplearning4j.nn.layers.objdetect.DetectedObject;
 import org.deeplearning4j.util.ModelSerializer;
-import org.deeplearning4j.zoo.model.VGG16;
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.indexing.NDArrayIndex;
 import org.slf4j.Logger;
@@ -28,13 +21,12 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.Adler32;
-import java.util.List;
 
 public class FaceRecognition implements IFaceRecognizer {
 
     private static Logger log = LoggerFactory.getLogger(com.antoine.dl.FaceRecognition.class);
 
-    private static final double THRESHOLD = 0.22;
+    private static double threshold;
 
     private FaceNetSmallV2Model faceNetSmallV2Model;
     private ComputationGraph computationGraph;
@@ -45,7 +37,9 @@ public class FaceRecognition implements IFaceRecognizer {
     private final String MODELSAVED_FILE = "modelSaved.zip";
     private final String CHECKSUM_FILE = "lastChecksum.txt";
 
-    private List<DetectedObject> predictedObjects;
+    public FaceRecognition(double threshold){
+        this.threshold= threshold;
+    }
 
 
     private INDArray transpose(INDArray indArray1) {
@@ -126,7 +120,7 @@ public class FaceRecognition implements IFaceRecognizer {
                     foundUser = entry.getKey();
                 }
             }
-            if (minDistance > THRESHOLD) {
+            if (minDistance > threshold) {
                 foundUser = "Unknown user";
             }
             log.info(foundUser + " with distance " + minDistance);

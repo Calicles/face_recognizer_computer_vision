@@ -120,7 +120,7 @@ public class Photo {
             }
 
                 ImageIO.write(photo, "PNG", new File(profilFile, userName.getText() + ".png"));
-            
+
                 webcam.dispose();
                 webcam.close();
                 synchronized (lock){

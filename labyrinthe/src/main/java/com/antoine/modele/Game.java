@@ -9,6 +9,8 @@ import com.antoine.contracts.IJeu;
 import com.antoine.structure_donnee.LevelState;
 
 import java.awt.Dimension;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 /**
@@ -41,7 +43,8 @@ public class Game implements IJeu {
      * <p>Initialise les premiers niveaux.</p>
      */
     public Game()  {
-        String configPath= String.valueOf(getClass().getResource("/config/conf.xml"));
+        Path programmePath = Paths.get(getClass().getProtectionDomain().getCodeSource().getLocation().getPath());
+        String configPath= Paths.get(programmePath.getParent().toString(), "config", "config_labyrinthe", "conf.xml").toString();
 
         listeners= new ArrayList<>();
         assembler= new Assembler(configPath);

@@ -5,13 +5,13 @@ import com.antoine.photoRegister.Photo;
 import com.antoine.vue.frame.Frame;
 import org.bytedeco.javacpp.*;
 
+import org.bytedeco.javacv.FrameFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
@@ -62,8 +62,21 @@ public class RecognizeUI {
 
 
     public void loadModel() throws Exception {
-        faceRecognition = new FaceRecognition();
+        double threshold = readConfig();
+        faceRecognition = new FaceRecognition(threshold);
         faceRecognition.loadModel(absoluteProgrammePath);
+    }
+
+    private double readConfig() {
+        double threshold = 0;
+        try(BufferedReader reader = new BufferedReader(new FileReader(Paths.get(absoluteProgrammePath, "config", "config_cam", "conf.txt").toFile())))
+        {
+            threshold = Double.parseDouble(reader.readLine());
+        } catch (Exception e) {
+            log.info("", e);
+            throw new RuntimeException(e);
+        }
+        return threshold;
     }
 
     public void loadProfils(ProgressBar progressBar) throws IOException, InterruptedException {
